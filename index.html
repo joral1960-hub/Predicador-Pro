@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente del Predicador - Edición Galería</title>
+    <title>Asistente del Predicador - Edición Profesional</title>
     <!-- Estilos de Alta Gama -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -128,7 +128,18 @@
                 setApiKey(clean);
                 localStorage.setItem('gemini_api_key', clean);
                 setShowSettings(false);
-                alert("Configuración guardada exitosamente.");
+            };
+
+            const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+
+            const shareApp = () => {
+                const el = document.createElement('textarea');
+                el.value = window.location.href;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                alert("¡Enlace de la app copiado! Ya puedes pegarlo en WhatsApp o enviarlo a un conocido.");
             };
 
             const callGemini = async (currentHistory) => {
@@ -208,25 +219,30 @@
                             </div>
                             <div>
                                 <h1 className={`text-xl font-bold tracking-tight leading-none mb-1.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                    Asistente del Predicador <span className="text-[10px] ml-2 opacity-50 font-mono">v24.0</span>
+                                    Asistente del Predicador <span className="text-[10px] ml-2 opacity-50 font-mono">v25.0</span>
                                 </h1>
                                 <p className={`text-[10px] font-bold tracking-[0.25em] uppercase ${isDark ? 'text-lime-500/60' : 'text-lime-700/60'}`}>Soli Deo Gloria • 1689</p>
                             </div>
                         </div>
                         <div className="flex gap-3">
-                            <button onClick={() => setTheme(isDark ? 'light' : 'dark')} className={`p-3 rounded-2xl border transition-all hover:scale-110 active:scale-95 ${
+                            <button onClick={shareApp} className={`p-3 rounded-2xl border transition-all hover:scale-110 active:scale-95 ${
                                 isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'
-                            }`}>
+                            }`} title="Compartir aplicación">
+                                <Icon name="share-2" className="w-5 h-5" />
+                            </button>
+                            <button onClick={toggleTheme} className={`p-3 rounded-2xl border transition-all hover:scale-110 active:scale-95 ${
+                                isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'
+                            }`} title="Cambiar tema">
                                 <Icon name={isDark ? "sun" : "moon"} className="w-5 h-5" />
                             </button>
                             <button onClick={() => setShowSettings(true)} className={`p-3 rounded-2xl border transition-all hover:scale-110 ${
                                 isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'
-                            }`}>
+                            }`} title="Ajustes">
                                 <Icon name="settings" className="w-5 h-5" />
                             </button>
                             <button onClick={() => { if(confirm("¿Reiniciar estudio?")) setMessages([]); }} className={`p-3 rounded-2xl border transition-all hover:scale-110 ${
                                 isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'
-                            }`}>
+                            }`} title="Limpiar historial">
                                 <Icon name="refresh-cw" className="w-5 h-5" />
                             </button>
                         </div>
@@ -244,7 +260,8 @@
                                 <div className="space-y-4">
                                     <h2 className={`text-4xl font-bold tracking-[0.5em] ${isDark ? 'text-white' : 'text-slate-900'}`}>REFORMADOS</h2>
                                     <p className={`text-base max-w-sm mx-auto italic font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                        "Lámpara es a mis pies tu palabra..." <br/> <span className="text-xs uppercase tracking-widest mt-4 block">Escribe un pasaje para comenzar</span>
+                                        "Lámpara es a mis pies tu palabra..." <br/> 
+                                        <span className="text-xs uppercase tracking-widest mt-4 block">Escribe un pasaje para comenzar. <br/> Si eres nuevo, configura tu API Key en los ajustes.</span>
                                     </p>
                                 </div>
                             </div>
@@ -318,7 +335,7 @@
 
                     {/* Settings Modal Rediseñado */}
                     {showSettings && (
-                        <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-2xl">
+                        <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-xl">
                             <div className={`p-14 rounded-[4rem] border max-w-md w-full space-y-12 shadow-[0_50px_100px_rgba(0,0,0,0.8)] text-center transition-all ${
                                 isDark ? 'bg-[#1a1a20] border-slate-800' : 'bg-white border-orange-50'
                             }`}>
@@ -329,7 +346,7 @@
                                 </div>
                                 <div className="space-y-3">
                                     <h3 className={`text-3xl font-bold tracking-tighter uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>Configuración</h3>
-                                    <p className={`text-sm px-6 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Pega tu llave de Google Gemini aquí para activar el motor de predicación.</p>
+                                    <p className={`text-sm px-6 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Copia tu llave de Google Gemini aquí. Tus conocidos también necesitarán configurar la suya para usar la app.</p>
                                 </div>
                                 <input 
                                     type="password" 
