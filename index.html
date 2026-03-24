@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente del Predicador v10.0 - Final</title>
+    <title>Asistente del Predicador v11.0 - Estable</title>
     <!-- Herramientas de diseño -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -64,22 +64,22 @@
                 setApiKey(cleanKey);
                 localStorage.setItem('gemini_api_key', cleanKey);
                 setShowSettings(false);
-                alert("Llave guardada. Prueba el chat ahora.");
+                alert("Llave guardada. ¡Prueba el chat ahora!");
             };
 
             const callGemini = async (currentMessages) => {
-                // Usamos v1beta con gemini-1.5-flash-latest por ser la más flexible
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                // USAMOS v1 (ESTABLE) Y EL NOMBRE DEL MODELO SIN "-LATEST"
+                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
                 
-                // MÉTODO INFALIBLE: Inyección Directa en la conversación
+                // MÉTODO DE INYECCIÓN DIRECTA PARA MÁXIMA COMPATIBILIDAD
                 const contents = [
                     { 
                         role: 'user', 
-                        parts: [{ text: `INSTRUCCIONES DE IDENTIDAD (Ignora saludos previos): ${SYSTEM_PROMPT}. Entendido?` }] 
+                        parts: [{ text: `INSTRUCCIONES DE IDENTIDAD: ${SYSTEM_PROMPT}. Entendido?` }] 
                     },
                     { 
                         role: 'model', 
-                        parts: [{ text: "Entendido. Soy su asistente teológico reformado. He cargado la base de datos de Jorge Álvarez. ¿Qué pasaje estudiaremos hoy?" }] 
+                        parts: [{ text: "Entendido. Soy su asistente teológico reformado. ¿Qué pasaje estudiaremos?" }] 
                     },
                     ...currentMessages.map(m => ({
                         role: m.role === 'assistant' ? 'model' : 'user',
@@ -129,11 +129,11 @@
                 <div className="flex flex-col h-screen max-w-4xl mx-auto bg-[#0f0f12] border-x border-slate-800 shadow-2xl overflow-hidden text-slate-200">
                     <header className="flex items-center justify-between px-6 py-4 bg-[#1a1a20] border-b border-slate-800 shrink-0 shadow-lg z-10">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-lime-500/10 rounded-lg text-lime-400 border border-lime-500/20">
+                            <div className="p-2 bg-lime-500/10 rounded-lg text-lime-400 border border-lime-500/20 shadow-[0_0_15px_rgba(132,204,22,0.1)]">
                                 <Icon name="shield" className="w-6 h-6" />
                             </div>
                             <div>
-                                <h1 className="text-lg font-bold text-white tracking-tight">Asistente Predicador <span className="text-lime-500 text-xs ml-1 font-mono uppercase">v10.0 Final</span></h1>
+                                <h1 className="text-lg font-bold text-white tracking-tight">Asistente Predicador <span className="text-lime-500 text-xs ml-1 font-mono uppercase">v11.0 Estable</span></h1>
                                 <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Tradición Reformada • 1689</p>
                             </div>
                         </div>
@@ -141,7 +141,7 @@
                             <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
                                 <Icon name="settings" className="w-5 h-5" />
                             </button>
-                            <button onClick={() => setMessages([])} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
+                            <button onClick={() => { if(confirm("¿Limpiar historial?")) setMessages([]); }} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
                                 <Icon name="refresh-cw" className="w-5 h-5" />
                             </button>
                         </div>
@@ -155,25 +155,25 @@
                                 </div>
                                 <div className="space-y-2">
                                     <h2 className="text-2xl font-bold text-white tracking-widest uppercase">SOLI DEO GLORIA</h2>
-                                    <p className="text-sm max-w-xs mx-auto italic text-slate-400">
-                                        Versión 10.0 (Edición de Rescate). Ingrese un pasaje para comenzar.
+                                    <p className="text-sm max-w-xs mx-auto italic text-slate-400 leading-relaxed text-xs md:text-sm">
+                                        Versión 11.0 (Estable y Segura). Ingrese un pasaje para comenzar su estudio bíblico.
                                     </p>
                                 </div>
                             </div>
                         )}
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                <div className={`p-5 rounded-2xl max-w-[95%] md:max-w-[85%] whitespace-pre-wrap leading-relaxed shadow-xl text-sm md:text-base ${
-                                    msg.role === 'user' ? 'bg-blue-700 text-white rounded-tr-none border border-blue-500/30' : 'bg-[#1a1a20] border border-slate-800 text-slate-200 rounded-tl-none'
+                                <div className={`p-4 rounded-2xl max-w-[95%] md:max-w-[85%] whitespace-pre-wrap leading-relaxed shadow-lg text-sm md:text-base ${
+                                    msg.role === 'user' ? 'bg-blue-700 text-white rounded-tr-none' : 'bg-[#1a1a20] border border-slate-800 text-slate-200 rounded-tl-none shadow-[0_4px_15px_rgba(0,0,0,0.4)]'
                                 }`}>
                                     {msg.content}
                                 </div>
                                 {msg.role === 'assistant' && !msg.content.includes('❌') && (
                                     <button 
-                                        onClick={() => { navigator.clipboard.writeText(msg.content); alert("¡Copiado al portapapeles!"); }} 
-                                        className="mt-3 text-[10px] font-bold text-slate-500 hover:text-lime-500 flex items-center gap-2 ml-2 transition-colors uppercase bg-slate-800/40 px-3 py-1.5 rounded-lg border border-slate-700/50"
+                                        onClick={() => { navigator.clipboard.writeText(msg.content); alert("¡Copiado!"); }} 
+                                        className="mt-2 text-[10px] font-bold text-slate-500 hover:text-lime-500 flex items-center gap-1 ml-2 transition-colors uppercase bg-slate-800/40 px-2 py-1 rounded"
                                     >
-                                        <Icon name="copy" className="w-3.5 h-3.5" /> Copiar para Word
+                                        <Icon name="copy" className="w-3 h-3" /> Copiar Bosquejo
                                     </button>
                                 )}
                             </div>
@@ -181,39 +181,33 @@
                         {isLoading && (
                             <div className="flex gap-4 items-center text-slate-500 text-sm italic animate-pulse px-2">
                                 <Icon name="loader-2" className="w-5 h-5 animate-spin text-lime-500" />
-                                Escudriñando las Escrituras y la Tradición...
+                                Consultando las Escrituras...
                             </div>
                         )}
                     </main>
 
-                    <footer className="p-4 md:p-6 bg-[#1a1a20] border-t border-slate-800 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] z-10">
-                        <div className="flex gap-3 max-w-3xl mx-auto relative items-center">
+                    <footer className="p-4 md:p-6 bg-[#1a1a20] border-t border-slate-800">
+                        <div className="max-w-4xl mx-auto relative flex gap-2">
                             <textarea
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-                                placeholder="Escribe el pasaje o una pregunta..."
-                                className="w-full bg-[#0b0b0d] text-white border border-slate-700 rounded-2xl px-6 py-4 outline-none focus:border-lime-500 focus:ring-1 focus:ring-lime-500/20 transition-all resize-none shadow-inner text-sm md:text-base min-h-[56px]"
+                                placeholder="Escribe aquí..."
+                                className="w-full bg-[#0b0b0d] text-white border border-slate-700 rounded-2xl px-6 py-4 outline-none focus:border-lime-500 transition-all resize-none shadow-inner text-sm md:text-base"
                                 rows="1"
                             />
-                            <button 
-                                onClick={handleSend} 
-                                disabled={isLoading || !input.trim()}
-                                className={`bg-lime-500 text-black p-4 rounded-2xl shadow-lg transition-all flex items-center justify-center ${isLoading || !input.trim() ? 'opacity-50 grayscale' : 'hover:bg-lime-400 active:scale-95 shadow-lime-500/20'}`}
-                            >
+                            <button onClick={handleSend} className="bg-lime-500 hover:bg-lime-400 text-black px-5 rounded-2xl transition-all shadow-lg active:scale-95">
                                 <Icon name="send" className="w-5 h-5" />
                             </button>
                         </div>
                     </footer>
 
                     {showSettings && (
-                        <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-md">
-                            <div className="bg-[#1a1a20] p-8 rounded-3xl border border-slate-800 max-w-sm w-full space-y-6 shadow-2xl text-center">
-                                <Icon name="key" className="w-14 h-14 text-lime-400 mx-auto mb-2" />
-                                <h3 className="text-xl font-bold text-white uppercase tracking-tighter">Configurar Motor IA</h3>
-                                <p className="text-xs text-slate-400 leading-relaxed px-2">
-                                    Introduce tu API Key de Google Gemini. La v10.0 te mostrará el error exacto de Google si algo falla.
-                                </p>
+                        <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-md text-center">
+                            <div className="bg-[#1a1a20] p-8 rounded-3xl border border-slate-800 max-w-sm w-full space-y-6 shadow-2xl">
+                                <Icon name="key" className="w-12 h-12 text-lime-400 mx-auto" />
+                                <h3 className="text-xl font-bold text-white uppercase tracking-tighter">Activar Motor IA</h3>
+                                <p className="text-xs text-slate-400">Pega la llave de Google AI Studio aquí abajo y dale a Guardar. La v11.0 usa la conexión estable oficial.</p>
                                 <input 
                                     type="password" 
                                     value={apiKey} 
@@ -221,9 +215,9 @@
                                     placeholder="AIzaSy..."
                                     className="w-full bg-[#0b0b0d] border border-slate-700 p-4 rounded-xl text-white outline-none focus:border-lime-400 text-center font-mono text-xs tracking-widest"
                                 />
-                                <div className="flex gap-3 pt-2">
+                                <div className="flex gap-3">
                                     <button onClick={() => saveKey(apiKey)} className="flex-1 bg-lime-500 text-black py-3 rounded-xl font-bold hover:bg-lime-400 transition-all shadow-lg shadow-lime-500/20">Guardar</button>
-                                    <button onClick={() => setShowSettings(false)} className="flex-1 bg-slate-800 text-white py-3 rounded-xl hover:bg-slate-700 transition-all">Cerrar</button>
+                                    <button onClick={() => setShowSettings(false)} className="flex-1 bg-slate-800 text-white py-3 rounded-xl">Cerrar</button>
                                 </div>
                             </div>
                         </div>
