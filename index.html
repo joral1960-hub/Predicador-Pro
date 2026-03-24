@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente del Predicador - Edición Profesional</title>
+    <title>PREDICADOR-PRO - Plataforma de Homilética</title>
     <!-- Estilos de Alta Gama -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -70,6 +70,17 @@
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
             70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .badge-premium {
+            background: linear-gradient(90deg, #84cc16 0%, #a3e635 100%);
+            color: #000;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -186,7 +197,7 @@
                 el.select();
                 document.execCommand('copy');
                 document.body.removeChild(el);
-                alert("¡Enlace de la app copiado! Ya puedes pegarlo en WhatsApp o enviarlo a un conocido.");
+                alert("¡Enlace de la plataforma copiado!");
             };
 
             const callGemini = async (currentHistory) => {
@@ -199,7 +210,7 @@
                 let lastError = "";
                 for (const conf of configs) {
                     try {
-                        setStatus(`Invocando motor ${conf.m}...`);
+                        setStatus(`Conectando al servidor...`);
                         const url = `https://generativelanguage.googleapis.com/${conf.v}/models/${conf.m}:generateContent?key=${apiKey}`;
                         const response = await fetch(url, {
                             method: 'POST',
@@ -207,7 +218,7 @@
                             body: JSON.stringify({
                                 contents: [
                                     { role: 'user', parts: [{ text: `INSTRUCCIONES: ${SYSTEM_PROMPT}.` }] },
-                                    { role: 'model', parts: [{ text: "Entendido. Soy el asistente de Jorge Álvarez. Base de datos activa y listo para sugerir temas de profundización." }] },
+                                    { role: 'model', parts: [{ text: "Suscripción validada. Acceso concedido a PREDICADOR-PRO. ¿Qué texto bíblico analizaremos?" }] },
                                     ...currentHistory.map(m => ({
                                         role: m.role === 'assistant' ? 'model' : 'user',
                                         parts: [{ text: m.content }]
@@ -240,7 +251,7 @@
                     const aiRes = await callGemini(newHistory);
                     setMessages([...newHistory, { role: 'assistant', content: aiRes }]);
                 } catch (err) {
-                    setMessages([...newHistory, { role: 'assistant', content: `❌ Error de Conexión: "${err.message}"` }]);
+                    setMessages([...newHistory, { role: 'assistant', content: `❌ Error de Servicio: No pudimos validar tu licencia. Por favor contacta a soporte.` }]);
                 } finally {
                     setIsLoading(false);
                     setStatus('');
@@ -254,7 +265,7 @@
                     isDark ? 'bg-[#0f0f12] border-slate-800 text-slate-200' : 'bg-[#fcfaf7] border-orange-100 text-slate-800'
                 }`}>
                     
-                    {/* Header Premium */}
+                    {/* Header Premium SaaS */}
                     <header className={`flex items-center justify-between px-8 py-5 border-b shrink-0 z-30 glass-effect sticky top-0 ${
                         isDark ? 'bg-[#1a1a20]/80 border-slate-800' : 'bg-white/70 border-orange-100 shadow-sm'
                     }`}>
@@ -265,50 +276,53 @@
                                 <Icon name="shield" className="w-6 h-6" />
                             </div>
                             <div>
-                                <h1 className={`text-xl font-bold tracking-tight leading-none mb-1.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                    Asistente del Predicador <span className="text-[10px] ml-2 opacity-50 font-mono italic">v28.0</span>
-                                </h1>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <h1 className={`text-xl font-bold tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                        PREDICADOR-PRO
+                                    </h1>
+                                    <span className="badge-premium">Suscripción PRO</span>
+                                </div>
                                 <p className={`text-[10px] font-bold tracking-[0.25em] uppercase ${isDark ? 'text-lime-500/60' : 'text-lime-700/60'}`}>Soli Deo Gloria</p>
                             </div>
                         </div>
                         <div className="flex gap-3">
                             <button onClick={shareApp} className={`p-3 rounded-2xl border transition-all hover:scale-110 active:scale-95 ${
                                 isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'
-                            }`} title="Compartir aplicación">
+                            }`} title="Compartir plataforma">
                                 <Icon name="share-2" className="w-5 h-5" />
                             </button>
                             <button onClick={() => setTheme(isDark ? 'light' : 'dark')} className={`p-3 rounded-2xl border transition-all hover:scale-110 active:scale-95 ${
                                 isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'
-                            }`} title="Cambiar tema">
+                            }`} title="Modo de lectura">
                                 <Icon name={isDark ? "sun" : "moon"} className="w-5 h-5" />
                             </button>
                             <button onClick={() => setShowSettings(true)} className={`p-3 rounded-2xl border transition-all hover:scale-110 ${
                                 isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'
-                            }`} title="Ajustes">
-                                <Icon name="settings" className="w-5 h-5" />
+                            }`} title="Gestionar Licencia">
+                                <Icon name="key" className="w-5 h-5" />
                             </button>
-                            <button onClick={() => { if(confirm("¿Reiniciar estudio?")) setMessages([]); }} className={`p-3 rounded-2xl border transition-all hover:scale-110 ${
+                            <button onClick={() => { if(confirm("¿Deseas cerrar el estudio actual?")) setMessages([]); }} className={`p-3 rounded-2xl border transition-all hover:scale-110 ${
                                 isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'
-                            }`} title="Limpiar historial">
+                            }`} title="Nueva Sesión">
                                 <Icon name="refresh-cw" className="w-5 h-5" />
                             </button>
                         </div>
                     </header>
 
-                    {/* Chat Area con Animaciones */}
+                    {/* Main Workspace */}
                     <main ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-14 space-y-12">
                         {messages.length === 0 && (
-                            <div className="flex flex-col items-center justify-center h-full text-center space-y-10 opacity-30 message-in">
-                                <div className={`p-16 rounded-full border-2 transition-all ${
+                            <div className="flex flex-col items-center justify-center h-full text-center space-y-10 message-in">
+                                <div className={`p-16 rounded-[3rem] border-2 transition-all ${
                                     isDark ? 'bg-slate-800/10 border-lime-500/5 shadow-[0_0_50px_rgba(132,204,22,0.05)]' : 'bg-white border-lime-500/10 shadow-sm'
                                 }`}>
-                                    <Icon name="book-open" className={`w-32 h-32 ${isDark ? 'text-lime-500/50' : 'text-lime-600/50'}`} />
+                                    <Icon name="layout-dashboard" className={`w-32 h-32 ${isDark ? 'text-lime-500/30' : 'text-lime-600/30'}`} />
                                 </div>
                                 <div className="space-y-4">
-                                    <h2 className={`text-4xl font-bold tracking-[0.6em] ${isDark ? 'text-white' : 'text-slate-900'}`}>PREDICADOR-PRO</h2>
-                                    <p className={`text-base max-w-sm mx-auto italic font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                        "Lámpara es a mis pies tu palabra..." <br/> 
-                                        <span className="text-xs uppercase tracking-widest mt-4 block">Análisis doctrinal interactivo con sugerencias de profundización.</span>
+                                    <h2 className={`text-4xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Bienvenido, Predicador</h2>
+                                    <p className={`text-base max-w-sm mx-auto italic font-medium leading-relaxed opacity-60 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        "Tu palabra es una lámpara a mis pies..." <br/> 
+                                        <span className="text-xs uppercase tracking-[0.2em] mt-6 block border-t pt-4 border-current">Inicia un nuevo análisis teológico profesional</span>
                                     </p>
                                 </div>
                             </div>
@@ -323,22 +337,29 @@
                                     {msg.role === 'user' ? <p className="text-lg whitespace-pre-wrap leading-relaxed italic">{msg.content}</p> : <FormattedResponse text={msg.content} />}
                                 </div>
                                 {msg.role === 'assistant' && !msg.content.includes('❌') && (
-                                    <button 
-                                        onClick={() => { 
-                                            const el = document.createElement('textarea');
-                                            el.value = msg.content;
-                                            document.body.appendChild(el);
-                                            el.select();
-                                            document.execCommand('copy');
-                                            document.body.removeChild(el);
-                                            alert("¡Bosquejo copiado para Word!"); 
-                                        }} 
-                                        className={`mt-6 text-[10px] font-bold flex items-center gap-3 ml-8 transition-all uppercase px-6 py-3 rounded-full border tracking-widest hover:scale-105 active:scale-95 ${
-                                            isDark ? 'text-slate-500 bg-slate-800/40 border-slate-700/50 hover:text-lime-400 hover:border-lime-500/30' : 'text-slate-400 bg-white border-orange-100 hover:text-lime-600 hover:border-lime-500'
-                                        }`}
-                                    >
-                                        <Icon name="copy" className="w-4 h-4" /> Copiar Texto Completo
-                                    </button>
+                                    <div className="flex gap-3 mt-6 ml-8">
+                                        <button 
+                                            onClick={() => { 
+                                                const el = document.createElement('textarea');
+                                                el.value = msg.content;
+                                                document.body.appendChild(el);
+                                                el.select();
+                                                document.execCommand('copy');
+                                                document.body.removeChild(el);
+                                                alert("Copiado al portapapeles."); 
+                                            }} 
+                                            className={`text-[10px] font-bold flex items-center gap-3 transition-all uppercase px-6 py-3 rounded-full border tracking-widest hover:scale-105 active:scale-95 ${
+                                                isDark ? 'text-slate-500 bg-slate-800/40 border-slate-700/50 hover:text-lime-400 hover:border-lime-500/30' : 'text-slate-400 bg-white border-orange-100 hover:text-lime-600 hover:border-lime-500'
+                                            }`}
+                                        >
+                                            <Icon name="copy" className="w-4 h-4" /> Exportar Texto
+                                        </button>
+                                        <button className={`text-[10px] font-bold flex items-center gap-3 transition-all uppercase px-6 py-3 rounded-full border tracking-widest ${
+                                            isDark ? 'text-slate-500 opacity-50' : 'text-slate-400 opacity-50'
+                                        }`}>
+                                            <Icon name="file-text" className="w-4 h-4" /> Guardar en Nube
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         ))}
@@ -346,14 +367,14 @@
                             <div className="flex flex-col gap-5 items-start px-6 message-in">
                                 <div className="flex gap-5 items-center text-sm font-bold animate-pulse text-lime-500 tracking-widest uppercase">
                                     <Icon name="loader-2" className="w-7 h-7 animate-spin" />
-                                    <span>Escudriñando las Escrituras...</span>
+                                    <span>Servidor procesando análisis...</span>
                                 </div>
                                 <div className="text-[10px] opacity-40 font-mono ml-12 tracking-[0.3em] uppercase">{status}</div>
                             </div>
                         )}
                     </main>
 
-                    {/* Input Área con Estilo Flotante */}
+                    {/* Input Área SaaS Style */}
                     <footer className={`p-8 border-t shrink-0 z-20 transition-all ${
                         isDark ? 'bg-[#1a1a20] border-slate-800 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]' : 'bg-white border-orange-100 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]'
                     }`}>
@@ -364,18 +385,18 @@
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
                                         onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                                        placeholder="Dicta un pasaje o escribe aquí..."
-                                        className={`w-full border rounded-[1.8rem] pl-8 pr-16 py-6 outline-none focus:ring-8 transition-all resize-none shadow-inner text-base min-h-[72px] ${
+                                        placeholder="Dicta el pasaje bíblico o una consulta doctrinal..."
+                                        className={`w-full border rounded-[2rem] pl-8 pr-16 py-6 outline-none focus:ring-8 transition-all resize-none shadow-inner text-base min-h-[76px] ${
                                             isDark ? 'bg-[#0b0b0d] text-white border-slate-700 focus:border-lime-500 focus:ring-lime-500/5' : 'bg-slate-50 text-slate-900 border-orange-100 focus:border-lime-500 focus:ring-lime-500/5'
                                         }`}
                                         rows="1"
                                     />
                                     <button 
                                         onClick={toggleListening}
-                                        className={`absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all ${
+                                        className={`absolute right-5 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all ${
                                             isListening ? 'bg-red-500 text-white pulse-red' : (isDark ? 'text-slate-500 hover:text-lime-500' : 'text-slate-400 hover:text-lime-600')
                                         }`}
-                                        title="Dictar por voz"
+                                        title="Dictado por voz profesional"
                                     >
                                         <Icon name={isListening ? "mic-off" : "mic"} className="w-6 h-6" />
                                     </button>
@@ -383,48 +404,61 @@
                                 <button 
                                     onClick={handleSend} 
                                     disabled={isLoading || !input.trim()}
-                                    className={`p-6 rounded-[1.8rem] transition-all shadow-2xl active:scale-90 flex items-center justify-center transform hover:rotate-2 ${
+                                    className={`p-7 rounded-[2rem] transition-all shadow-2xl active:scale-90 flex items-center justify-center transform hover:rotate-1 ${
                                         isLoading || !input.trim() ? 'bg-slate-400 text-white cursor-not-allowed opacity-30 grayscale' : 'bg-lime-500 text-white hover:bg-lime-600 shadow-lime-500/30'
                                     }`}
                                 >
                                     <Icon name="send" className="w-7 h-7" />
                                 </button>
                             </div>
-                            <div className={`text-center text-[10px] uppercase tracking-widest font-bold opacity-30 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                © 2025 PREDICADOR-PRO | Desarrollado por Jorge Álvarez
+                            <div className="flex justify-between items-center px-4">
+                                <div className={`text-[9px] uppercase tracking-widest font-bold opacity-30 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                    PREDICADOR-PRO PLATFORM v1.0.0-PRO
+                                </div>
+                                <div className={`text-[9px] uppercase tracking-widest font-bold opacity-30 flex gap-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                    <span>Términos</span>
+                                    <span>Privacidad</span>
+                                    <span>Soporte Técnico</span>
+                                </div>
                             </div>
                         </div>
                     </footer>
 
-                    {/* Settings Modal Rediseñado */}
+                    {/* Licencia Modal SaaS */}
                     {showSettings && (
-                        <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-xl">
+                        <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-2xl">
                             <div className={`p-14 rounded-[4rem] border max-w-md w-full space-y-12 shadow-[0_50px_100px_rgba(0,0,0,0.8)] text-center transition-all ${
                                 isDark ? 'bg-[#1a1a20] border-slate-800' : 'bg-white border-orange-50'
                             }`}>
                                 <div className={`p-6 rounded-full w-fit mx-auto border shadow-inner transition-all ${
                                     isDark ? 'bg-lime-500/10 border-lime-500/20 text-lime-400' : 'bg-lime-50 text-lime-600 border-lime-100'
                                 }`}>
-                                    <Icon name="key" className="w-16 h-16" />
+                                    <Icon name="shield-check" className="w-16 h-16" />
                                 </div>
                                 <div className="space-y-3">
-                                    <h3 className={`text-3xl font-bold tracking-tighter uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>Configuración</h3>
-                                    <p className={`text-sm px-6 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Versión 28.0 - Edición PREDICADOR-PRO con sugerencias inteligentes.</p>
+                                    <h3 className={`text-3xl font-extrabold tracking-tighter uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>Mi Suscripción</h3>
+                                    <p className={`text-sm px-6 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Ingresa tu código de licencia para habilitar el motor de análisis doctrinal.</p>
                                 </div>
-                                <input 
-                                    type="password" 
-                                    value={apiKey} 
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder="API KEY DE GOOGLE..."
-                                    className={`w-full border p-7 rounded-[2rem] text-center font-mono text-xs tracking-[0.3em] shadow-2xl outline-none focus:border-lime-400 transition-all ${
-                                        isDark ? 'bg-[#0b0b0d] text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-orange-100'
-                                    }`}
-                                />
+                                <div className="space-y-4">
+                                    <input 
+                                        type="password" 
+                                        value={apiKey} 
+                                        onChange={(e) => setApiKey(e.target.value)}
+                                        placeholder="LICENCIA DE ACCESO..."
+                                        className={`w-full border p-7 rounded-[2rem] text-center font-mono text-xs tracking-[0.3em] shadow-2xl outline-none focus:border-lime-400 transition-all ${
+                                            isDark ? 'bg-[#0b0b0d] text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-orange-100'
+                                        }`}
+                                    />
+                                    <div className="flex justify-center gap-2">
+                                        <span className="text-[9px] uppercase tracking-widest opacity-50">Estado:</span>
+                                        <span className="text-[9px] uppercase tracking-widest text-lime-500 font-bold">Activa hasta 2026</span>
+                                    </div>
+                                </div>
                                 <div className="flex flex-col gap-4">
-                                    <button onClick={() => saveKey(apiKey)} className="w-full bg-lime-500 text-white py-6 rounded-[2rem] font-bold hover:bg-lime-600 shadow-xl shadow-lime-500/20 transition-all uppercase text-xs tracking-widest">Guardar Cambios</button>
+                                    <button onClick={() => saveKey(apiKey)} className="w-full bg-lime-500 text-white py-6 rounded-[2rem] font-bold hover:bg-lime-600 shadow-xl shadow-lime-500/20 transition-all uppercase text-xs tracking-widest">Activar Licencia</button>
                                     <button onClick={() => setShowSettings(false)} className={`w-full py-6 rounded-[2rem] font-bold transition-all uppercase text-xs tracking-widest ${
                                         isDark ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                                    }`}>Cerrar</button>
+                                    }`}>Regresar al Panel</button>
                                 </div>
                             </div>
                         </div>
