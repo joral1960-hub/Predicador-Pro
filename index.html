@@ -10,97 +10,49 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Firebase SDK para Gestión de Licencias -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        
+        window.firebaseConfig = JSON.parse(__firebase_config);
+        window.appId = typeof __app_id !== 'undefined' ? __app_id : 'predicador-pro-default';
+        const app = initializeApp(window.firebaseConfig);
+        window.db = getFirestore(app);
+        window.auth = getAuth(app);
+    </script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Crimson+Pro:wght@400;600&display=swap');
         
         body { font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        
-        /* Scroll personalizado estilo minimalista */
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #84cc16; border-radius: 10px; opacity: 0.5; }
 
-        /* Estilo de lectura premium para el asistente */
-        .theological-paper {
-            font-family: 'Crimson Pro', serif;
-            font-size: 1.15rem;
-            line-height: 1.7;
-        }
-        
-        .theological-paper h2 { 
-            font-family: 'Playfair Display', serif; 
-            font-size: 1.8rem; 
-            margin: 1.5rem 0 1rem; 
-            color: #84cc16; 
-            border-bottom: 2px solid rgba(132, 204, 22, 0.3);
-            display: inline-block;
-        }
-
-        .theological-paper h3 { 
-            font-family: 'Inter', sans-serif;
-            font-weight: 800; 
-            margin-top: 1.5rem; 
-            text-transform: uppercase; 
-            font-size: 0.85rem; 
-            letter-spacing: 0.15em; 
-            color: inherit;
-            opacity: 0.8;
-        }
-
-        .theological-paper strong {
-            color: #a3e635;
-            font-weight: 700;
-        }
-
-        .light-mode .theological-paper strong {
-            color: #65a30d;
-        }
+        .theological-paper { font-family: 'Crimson Pro', serif; font-size: 1.15rem; line-height: 1.7; }
+        .theological-paper h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin: 1.5rem 0 1rem; color: #84cc16; border-bottom: 2px solid rgba(132, 204, 22, 0.3); display: inline-block; }
+        .theological-paper h3 { font-family: 'Inter', sans-serif; font-weight: 800; margin-top: 1.5rem; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.15em; color: inherit; opacity: 0.8; }
+        .theological-paper strong { color: #a3e635; font-weight: 700; }
+        .light-mode .theological-paper strong { color: #65a30d; }
 
         .message-in { animation: slideUp 0.5s cubic-bezier(0, 0, 0.2, 1); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Efecto de cristal */
         .glass-effect { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 
-        /* Animación para el micrófono activo */
-        .pulse-red {
-            animation: pulse-red 1.5s infinite;
-        }
+        .pulse-red { animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
             70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
-        .badge-premium {
-            background: linear-gradient(90deg, #84cc16 0%, #a3e635 100%);
-            color: #000;
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 99px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Contenedor de emblema tradicional */
-        .emblem-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .emblem-ring {
-            position: absolute;
-            border: 1px solid currentColor;
-            border-radius: 50%;
-            opacity: 0.2;
-            animation: rotate-slow 20s linear infinite;
-        }
-        @keyframes rotate-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+        .badge-premium { background: linear-gradient(90deg, #84cc16 0%, #a3e635 100%); color: #000; font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .emblem-container { position: relative; display: flex; align-items: center; justify-content: center; }
+        .emblem-ring { position: absolute; border: 1px solid currentColor; border-radius: 50%; opacity: 0.2; animation: rotate-slow 20s linear infinite; }
+        @keyframes rotate-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -108,14 +60,13 @@
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
+        const { doc, getDoc } = window.firebaseFirestore || {};
 
         const SYSTEM_PROMPT = `Eres el Asistente Teológico Reformado de Jorge Álvarez (PREDICADOR-PRO). 
         Misión: Generar bosquejos de sermones profundos y estudios bíblicos con formato impecable.
         Marco: Biblia (Autoridad Suprema), Confesión de Fe de Londres de 1689.
         Formato Visual: Usa títulos (##), subtítulos (###) y negritas (**) para resaltar conceptos clave.
-        Proceso: Contexto, Exégesis, Doctrina, Evangelio, Aplicación y Bosquejo.
-        CRÍTICO: Al final de cada respuesta, incluye SIEMPRE una sección titulada "## Profundizando en el Estudio" con 3 temas sugeridos o preguntas de seguimiento para que el usuario pueda repreguntar.
-        Importante: Responde siempre en español con un tono pastoral y académico. Mantén la memoria de la conversación.`;
+        CRÍTICO: Al final de cada respuesta, incluye SIEMPRE una sección titulada "## Profundizando en el Estudio" con 3 temas sugeridos.`;
 
         const Icon = ({ name, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
@@ -131,15 +82,11 @@
                         if (line.startsWith('### ')) return <h3 key={i}>{line.replace('### ', '')}</h3>;
                         if (line.startsWith('- ') || line.startsWith('* ')) return <li key={i} className="ml-6 my-2 list-disc opacity-90">{line.substring(2)}</li>;
                         if (line.trim() === '') return <div key={i} className="h-4"></div>;
-                        
-                        // Renderizado de negritas simple
                         const parts = line.split(/(\*\*.*?\*\*)/g);
                         return (
                             <p key={i} className="mb-4 opacity-95">
                                 {parts.map((part, j) => 
-                                    part.startsWith('**') && part.endsWith('**') 
-                                    ? <strong key={j}>{part.slice(2, -2)}</strong> 
-                                    : part
+                                    part.startsWith('**') && part.endsWith('**') ? <strong key={j}>{part.slice(2, -2)}</strong> : part
                                 )}
                             </p>
                         );
@@ -153,9 +100,11 @@
             const [input, setInput] = useState('');
             const [isLoading, setIsLoading] = useState(false);
             const [isListening, setIsListening] = useState(false);
-            const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
+            const [licenseCode, setLicenseCode] = useState(localStorage.getItem('predicador_license') || '');
+            const [activeKey, setActiveKey] = useState(null);
+            const [isLicenseValid, setIsLicenseValid] = useState(false);
             const [theme, setTheme] = useState(localStorage.getItem('app_theme') || 'dark');
-            const [showSettings, setShowSettings] = useState(false);
+            const [showSettings, setShowSettings] = useState(!localStorage.getItem('predicador_license'));
             const [status, setStatus] = useState('');
             const scrollRef = useRef(null);
             const recognitionRef = useRef(null);
@@ -166,111 +115,102 @@
                 document.body.className = theme === 'dark' ? 'dark-mode' : 'light-mode';
             }, [messages, isLoading, theme]);
 
-            // Configuración del Micrófono
+            // Validación de Licencia contra la base de datos central
+            const validateLicense = async (code) => {
+                if (!code) return;
+                setStatus("Validando licencia...");
+                try {
+                    // Importamos las funciones necesarias dinámicamente si es necesario
+                    const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js");
+                    const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js");
+                    
+                    const auth = getAuth();
+                    await signInAnonymously(auth);
+
+                    const db = getFirestore();
+                    // Buscamos la licencia en la ruta pública permitida
+                    const licenseDoc = await getDoc(doc(db, 'artifacts', window.appId, 'public', 'data', 'licenses', code));
+                    
+                    if (licenseDoc.exists()) {
+                        const data = licenseDoc.data();
+                        if (data.active === true) {
+                            setActiveKey(data.apiKey);
+                            setIsLicenseValid(true);
+                            localStorage.setItem('predicador_license', code);
+                            setShowSettings(false);
+                        } else {
+                            alert("Esta licencia ha expirado o está inactiva. Contacte a soporte.");
+                            setIsLicenseValid(false);
+                        }
+                    } else {
+                        alert("Código de licencia no válido.");
+                        setIsLicenseValid(false);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Error al conectar con el servidor de licencias.");
+                } finally {
+                    setStatus("");
+                }
+            };
+
+            useEffect(() => {
+                if (licenseCode) validateLicense(licenseCode);
+            }, []);
+
+            // Micrófono
             useEffect(() => {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (SpeechRecognition) {
                     recognitionRef.current = new SpeechRecognition();
-                    recognitionRef.current.continuous = false;
-                    recognitionRef.current.interimResults = false;
                     recognitionRef.current.lang = 'es-ES';
-
                     recognitionRef.current.onresult = (event) => {
-                        const transcript = event.results[0][0].transcript;
-                        setInput(prev => prev + (prev ? ' ' : '') + transcript);
+                        setInput(prev => prev + (prev ? ' ' : '') + event.results[0][0].transcript);
                         setIsListening(false);
                     };
-
-                    recognitionRef.current.onerror = () => setIsListening(false);
                     recognitionRef.current.onend = () => setIsListening(false);
                 }
             }, []);
 
             const toggleListening = () => {
-                if (!recognitionRef.current) {
-                    alert("Tu navegador no soporta comandos de voz. Intenta con Chrome o Edge.");
-                    return;
-                }
-
-                if (isListening) {
-                    recognitionRef.current.stop();
-                } else {
-                    setIsListening(true);
-                    recognitionRef.current.start();
-                }
-            };
-
-            const saveKey = (key) => {
-                const clean = key.trim().replace(/["']/g, "");
-                setApiKey(clean);
-                localStorage.setItem('gemini_api_key', clean);
-                setShowSettings(false);
-            };
-
-            const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-
-            const shareApp = () => {
-                const el = document.createElement('textarea');
-                el.value = window.location.href;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
-                alert("¡Enlace de la plataforma copiado!");
+                if (!recognitionRef.current) return alert("Navegador no compatible.");
+                if (isListening) recognitionRef.current.stop();
+                else { setIsListening(true); recognitionRef.current.start(); }
             };
 
             const callGemini = async (currentHistory) => {
-                const configs = [
-                    { v: 'v1beta', m: 'gemini-2.5-flash' }, 
-                    { v: 'v1beta', m: 'gemini-2.0-flash' },
-                    { v: 'v1', m: 'gemini-1.5-flash' }
-                ];
-
-                let lastError = "";
-                for (const conf of configs) {
-                    try {
-                        setStatus(`Conectando al servidor...`);
-                        const url = `https://generativelanguage.googleapis.com/${conf.v}/models/${conf.m}:generateContent?key=${apiKey}`;
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [
-                                    { role: 'user', parts: [{ text: `INSTRUCCIONES: ${SYSTEM_PROMPT}.` }] },
-                                    { role: 'model', parts: [{ text: "Suscripción validada. Acceso concedido a PREDICADOR-PRO. ¿Qué texto bíblico analizaremos?" }] },
-                                    ...currentHistory.map(m => ({
-                                        role: m.role === 'assistant' ? 'model' : 'user',
-                                        parts: [{ text: m.content }]
-                                    }))
-                                ]
-                            })
-                        });
-                        const data = await response.json();
-                        if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
-                            return data.candidates[0].content.parts[0].text;
-                        } else {
-                            lastError = data.error?.message || "Error";
-                        }
-                    } catch (e) { lastError = e.message; }
-                }
-                throw new Error(lastError);
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [
+                            { role: 'user', parts: [{ text: `INSTRUCCIONES: ${SYSTEM_PROMPT}.` }] },
+                            { role: 'model', parts: [{ text: "Licencia verificada. Preparado para el análisis." }] },
+                            ...currentHistory.map(m => ({
+                                role: m.role === 'assistant' ? 'model' : 'user',
+                                parts: [{ text: m.content }]
+                            }))
+                        ]
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) return data.candidates[0].content.parts[0].text;
+                throw new Error(data.error?.message || "Error");
             };
 
             const handleSend = async () => {
-                if (!input.trim() || isLoading) return;
-                if (!apiKey) { setShowSettings(true); return; }
-
+                if (!input.trim() || isLoading || !isLicenseValid) return;
                 const userMsg = { role: 'user', content: input };
                 const newHistory = [...messages, userMsg];
                 setMessages(newHistory);
                 setInput('');
                 setIsLoading(true);
-
                 try {
                     const aiRes = await callGemini(newHistory);
                     setMessages([...newHistory, { role: 'assistant', content: aiRes }]);
                 } catch (err) {
-                    setMessages([...newHistory, { role: 'assistant', content: `❌ Error de Servicio: No pudimos validar tu licencia. Por favor contacta a soporte.` }]);
+                    setMessages([...newHistory, { role: 'assistant', content: `❌ El servicio ha encontrado un problema técnico o la licencia ha sido revocada.` }]);
                 } finally {
                     setIsLoading(false);
                     setStatus('');
@@ -284,125 +224,61 @@
                     isDark ? 'bg-[#0f0f12] border-slate-800 text-slate-200' : 'bg-[#fcfaf7] border-orange-100 text-slate-800'
                 }`}>
                     
-                    {/* Header Premium SaaS */}
                     <header className={`flex items-center justify-between px-8 py-5 border-b shrink-0 z-30 glass-effect sticky top-0 ${
                         isDark ? 'bg-[#1a1a20]/80 border-slate-800' : 'bg-white/70 border-orange-100 shadow-sm'
                     }`}>
                         <div className="flex items-center gap-5">
-                            <div className={`p-3 rounded-2xl border shadow-xl transition-all transform hover:rotate-6 ${
-                                isDark ? 'bg-lime-500/10 text-lime-400 border-lime-500/20' : 'bg-lime-600 text-white border-lime-700'
-                            }`}>
+                            <div className={`p-3 rounded-2xl border shadow-xl ${isDark ? 'bg-lime-500/10 text-lime-400 border-lime-500/20' : 'bg-lime-600 text-white border-lime-700'}`}>
                                 <Icon name="shield" className="w-6 h-6" />
                             </div>
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                    <h1 className={`text-xl font-bold tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                        PREDICADOR-PRO
-                                    </h1>
-                                    <span className="badge-premium">Suscripción PRO</span>
+                                    <h1 className={`text-xl font-bold tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>PREDICADOR-PRO</h1>
+                                    <span className="badge-premium">{isLicenseValid ? 'Suscripción PRO' : 'Sin Acceso'}</span>
                                 </div>
                                 <p className={`text-[10px] font-bold tracking-[0.25em] uppercase ${isDark ? 'text-lime-500/60' : 'text-lime-700/60'}`}>Soli Deo Gloria</p>
                             </div>
                         </div>
                         <div className="flex gap-3">
-                            <button onClick={shareApp} className={`p-3 rounded-2xl border transition-all hover:scale-110 active:scale-95 ${
-                                isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'
-                            }`} title="Compartir plataforma">
-                                <Icon name="share-2" className="w-5 h-5" />
-                            </button>
-                            <button onClick={() => setTheme(isDark ? 'light' : 'dark')} className={`p-3 rounded-2xl border transition-all hover:scale-110 active:scale-95 ${
-                                isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'
-                            }`} title="Modo de lectura">
+                            <button onClick={() => setTheme(isDark ? 'light' : 'dark')} className={`p-3 rounded-2xl border transition-all ${isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'}`}>
                                 <Icon name={isDark ? "sun" : "moon"} className="w-5 h-5" />
                             </button>
-                            <button onClick={() => setShowSettings(true)} className={`p-3 rounded-2xl border transition-all hover:scale-110 ${
-                                isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'
-                            }`} title="Gestionar Licencia">
+                            <button onClick={() => setShowSettings(true)} className={`p-3 rounded-2xl border transition-all ${isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'}`}>
                                 <Icon name="key" className="w-5 h-5" />
                             </button>
-                            <button onClick={() => { if(confirm("¿Deseas cerrar el estudio actual?")) setMessages([]); }} className={`p-3 rounded-2xl border transition-all hover:scale-110 ${
-                                isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'
-                            }`} title="Nueva Sesión">
+                            <button onClick={() => setMessages([])} className={`p-3 rounded-2xl border transition-all ${isDark ? 'text-slate-400 border-slate-800 hover:bg-slate-800' : 'text-slate-600 border-orange-100 hover:bg-orange-50'}`}>
                                 <Icon name="refresh-cw" className="w-5 h-5" />
                             </button>
                         </div>
                     </header>
 
-                    {/* Main Workspace */}
                     <main ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-14 space-y-12">
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center h-full text-center space-y-10 message-in">
                                 <div className="emblem-container">
                                     <div className="emblem-ring w-48 h-48 border-dashed"></div>
-                                    <div className="emblem-ring w-56 h-56 border-solid opacity-10"></div>
-                                    <div className={`relative p-12 rounded-full border-2 transition-all ${
-                                        isDark ? 'bg-slate-800/10 border-lime-500/10 shadow-[0_0_50px_rgba(132,204,22,0.05)]' : 'bg-white border-lime-500/10 shadow-sm'
-                                    }`}>
+                                    <div className={`relative p-12 rounded-full border-2 transition-all ${isDark ? 'bg-slate-800/10 border-lime-500/10' : 'bg-white border-lime-500/10 shadow-sm'}`}>
                                         <Icon name="book-marked" className={`w-32 h-32 ${isDark ? 'text-lime-500/30' : 'text-lime-600/30'}`} />
                                     </div>
                                 </div>
                                 <div className="space-y-4">
-                                    <h2 className={`text-5xl font-extrabold tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: "'Playfair Display', serif" }}>
-                                        Escritorio de Estudio
-                                    </h2>
-                                    <p className={`text-lg max-w-sm mx-auto italic font-medium leading-relaxed opacity-60 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} style={{ fontFamily: "'Crimson Pro', serif" }}>
-                                        "Trae los libros, pero especialmente los pergaminos..." <br/> 
-                                        <span className="text-xs uppercase tracking-[0.3em] mt-8 block border-t pt-6 border-current font-sans">Análisis Teológico Profesional</span>
-                                    </p>
+                                    <h2 className="text-5xl font-extrabold tracking-tighter" style={{ fontFamily: "'Playfair Display', serif" }}>Escritorio de Estudio</h2>
+                                    <p className="text-lg opacity-60 italic" style={{ fontFamily: "'Crimson Pro', serif" }}>"Trae los libros, pero especialmente los pergaminos..."</p>
                                 </div>
                             </div>
                         )}
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex flex-col message-in ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                <div className={`p-8 rounded-[2.5rem] max-w-[95%] md:max-w-[90%] shadow-2xl transition-all border ${
-                                    msg.role === 'user' 
-                                    ? 'bg-gradient-to-br from-blue-600 to-blue-700 border-blue-500 text-white rounded-tr-none shadow-blue-500/10' 
-                                    : (isDark ? 'bg-[#1a1a20] border-slate-800 text-slate-200 rounded-tl-none' : 'bg-white border-orange-100 text-slate-800 rounded-tl-none')
+                                <div className={`p-8 rounded-[2.5rem] max-w-[95%] md:max-w-[90%] shadow-2xl border ${
+                                    msg.role === 'user' ? 'bg-blue-600 border-blue-500 text-white rounded-tr-none' : (isDark ? 'bg-[#1a1a20] border-slate-800 text-slate-200' : 'bg-white border-orange-100 text-slate-800')
                                 }`}>
-                                    {msg.role === 'user' ? <p className="text-lg whitespace-pre-wrap leading-relaxed italic">{msg.content}</p> : <FormattedResponse text={msg.content} />}
+                                    {msg.role === 'user' ? <p className="text-lg italic">{msg.content}</p> : <FormattedResponse text={msg.content} />}
                                 </div>
-                                {msg.role === 'assistant' && !msg.content.includes('❌') && (
-                                    <div className="flex gap-3 mt-6 ml-8">
-                                        <button 
-                                            onClick={() => { 
-                                                const el = document.createElement('textarea');
-                                                el.value = msg.content;
-                                                document.body.appendChild(el);
-                                                el.select();
-                                                document.execCommand('copy');
-                                                document.body.removeChild(el);
-                                                alert("Copiado al portapapeles."); 
-                                            }} 
-                                            className={`text-[10px] font-bold flex items-center gap-3 transition-all uppercase px-6 py-3 rounded-full border tracking-widest hover:scale-105 active:scale-95 ${
-                                                isDark ? 'text-slate-500 bg-slate-800/40 border-slate-700/50 hover:text-lime-400 hover:border-lime-500/30' : 'text-slate-400 bg-white border-orange-100 hover:text-lime-600 hover:border-lime-500'
-                                            }`}
-                                        >
-                                            <Icon name="copy" className="w-4 h-4" /> Exportar Texto
-                                        </button>
-                                        <button className={`text-[10px] font-bold flex items-center gap-3 transition-all uppercase px-6 py-3 rounded-full border tracking-widest ${
-                                            isDark ? 'text-slate-500 opacity-50' : 'text-slate-400 opacity-50'
-                                        }`}>
-                                            <Icon name="file-text" className="w-4 h-4" /> Guardar en Nube
-                                        </button>
-                                    </div>
-                                )}
                             </div>
                         ))}
-                        {isLoading && (
-                            <div className="flex flex-col gap-5 items-start px-6 message-in">
-                                <div className="flex gap-5 items-center text-sm font-bold animate-pulse text-lime-500 tracking-widest uppercase">
-                                    <Icon name="loader-2" className="w-7 h-7 animate-spin" />
-                                    <span>Servidor procesando análisis...</span>
-                                </div>
-                                <div className="text-[10px] opacity-40 font-mono ml-12 tracking-[0.3em] uppercase">{status}</div>
-                            </div>
-                        )}
                     </main>
 
-                    {/* Input Área SaaS Style */}
-                    <footer className={`p-8 border-t shrink-0 z-20 transition-all ${
-                        isDark ? 'bg-[#1a1a20] border-slate-800 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]' : 'bg-white border-orange-100 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]'
-                    }`}>
+                    <footer className={`p-8 border-t shrink-0 z-20 transition-all ${isDark ? 'bg-[#1a1a20] border-slate-800 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]' : 'bg-white border-orange-100 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]'}`}>
                         <div className="max-w-4xl mx-auto flex flex-col gap-4">
                             <div className="flex gap-5 items-end">
                                 <div className="relative flex-1">
@@ -410,80 +286,44 @@
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
                                         onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                                        placeholder="Dicta el pasaje bíblico o una consulta doctrinal..."
-                                        className={`w-full border rounded-[2rem] pl-8 pr-16 py-6 outline-none focus:ring-8 transition-all resize-none shadow-inner text-base min-h-[76px] ${
-                                            isDark ? 'bg-[#0b0b0d] text-white border-slate-700 focus:border-lime-500 focus:ring-lime-500/5' : 'bg-slate-50 text-slate-900 border-orange-100 focus:border-lime-500 focus:ring-lime-500/5'
-                                        }`}
+                                        placeholder={isLicenseValid ? "Dicta el pasaje o escribe aquí..." : "Verifica tu licencia primero"}
+                                        disabled={!isLicenseValid}
+                                        className={`w-full border rounded-[2rem] pl-8 pr-16 py-6 outline-none focus:ring-8 transition-all resize-none shadow-inner text-base min-h-[76px] ${isDark ? 'bg-[#0b0b0d] text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-orange-100'}`}
                                         rows="1"
                                     />
-                                    <button 
-                                        onClick={toggleListening}
-                                        className={`absolute right-5 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all ${
-                                            isListening ? 'bg-red-500 text-white pulse-red' : (isDark ? 'text-slate-500 hover:text-lime-500' : 'text-slate-400 hover:text-lime-600')
-                                        }`}
-                                        title="Dictado por voz profesional"
-                                    >
+                                    <button onClick={toggleListening} className={`absolute right-5 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all ${isListening ? 'bg-red-500 text-white pulse-red' : (isDark ? 'text-slate-500 hover:text-lime-500' : 'text-slate-400 hover:text-lime-600')}`}>
                                         <Icon name={isListening ? "mic-off" : "mic"} className="w-6 h-6" />
                                     </button>
                                 </div>
-                                <button 
-                                    onClick={handleSend} 
-                                    disabled={isLoading || !input.trim()}
-                                    className={`p-7 rounded-[2rem] transition-all shadow-2xl active:scale-90 flex items-center justify-center transform hover:rotate-1 ${
-                                        isLoading || !input.trim() ? 'bg-slate-400 text-white cursor-not-allowed opacity-30 grayscale' : 'bg-lime-500 text-white hover:bg-lime-600 shadow-lime-500/30'
-                                    }`}
-                                >
+                                <button onClick={handleSend} disabled={isLoading || !input.trim() || !isLicenseValid} className={`p-7 rounded-[2rem] transition-all shadow-2xl active:scale-90 ${isLoading || !input.trim() || !isLicenseValid ? 'bg-slate-400 opacity-30 cursor-not-allowed' : 'bg-lime-500 text-white hover:bg-lime-600'}`}>
                                     <Icon name="send" className="w-7 h-7" />
                                 </button>
                             </div>
-                            <div className="flex justify-between items-center px-4">
-                                <div className={`text-[9px] uppercase tracking-widest font-bold opacity-30 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                    PREDICADOR-PRO PLATFORM v1.0.0-PRO
-                                </div>
-                                <div className={`text-[9px] uppercase tracking-widest font-bold opacity-30 flex gap-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                    <span>Términos</span>
-                                    <span>Privacidad</span>
-                                    <span>Soporte Técnico</span>
-                                </div>
+                            <div className="flex justify-between items-center px-4 opacity-30 text-[9px] uppercase font-bold tracking-widest">
+                                <span>© 2025 PREDICADOR-PRO PLATFORM</span>
+                                <div className="flex gap-4"><span>Soporte</span><span>Términos</span></div>
                             </div>
                         </div>
                     </footer>
 
-                    {/* Licencia Modal SaaS */}
                     {showSettings && (
                         <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-2xl">
-                            <div className={`p-14 rounded-[4rem] border max-w-md w-full space-y-12 shadow-[0_50px_100px_rgba(0,0,0,0.8)] text-center transition-all ${
-                                isDark ? 'bg-[#1a1a20] border-slate-800' : 'bg-white border-orange-50'
-                            }`}>
-                                <div className={`p-6 rounded-full w-fit mx-auto border shadow-inner transition-all ${
-                                    isDark ? 'bg-lime-500/10 border-lime-500/20 text-lime-400' : 'bg-lime-50 text-lime-600 border-lime-100'
-                                }`}>
-                                    <Icon name="shield-check" className="w-16 h-16" />
-                                </div>
+                            <div className={`p-14 rounded-[4rem] border max-w-md w-full space-y-12 text-center ${isDark ? 'bg-[#1a1a20] border-slate-800' : 'bg-white border-orange-50'}`}>
+                                <Icon name="shield-check" className="w-16 h-16 mx-auto text-lime-500" />
                                 <div className="space-y-3">
-                                    <h3 className={`text-3xl font-extrabold tracking-tighter uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>Mi Suscripción</h3>
-                                    <p className={`text-sm px-6 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Ingresa tu código de licencia para habilitar el motor de análisis doctrinal.</p>
+                                    <h3 className="text-3xl font-extrabold uppercase">Licencia del Servicio</h3>
+                                    <p className="text-sm opacity-60">Ingresa tu código único de suscriptor.</p>
                                 </div>
-                                <div className="space-y-4">
-                                    <input 
-                                        type="password" 
-                                        value={apiKey} 
-                                        onChange={(e) => setApiKey(e.target.value)}
-                                        placeholder="LICENCIA DE ACCESO..."
-                                        className={`w-full border p-7 rounded-[2rem] text-center font-mono text-xs tracking-[0.3em] shadow-2xl outline-none focus:border-lime-400 transition-all ${
-                                            isDark ? 'bg-[#0b0b0d] text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-orange-100'
-                                        }`}
-                                    />
-                                    <div className="flex justify-center gap-2">
-                                        <span className="text-[9px] uppercase tracking-widest opacity-50">Estado:</span>
-                                        <span className="text-[9px] uppercase tracking-widest text-lime-500 font-bold">Activa hasta 2026</span>
-                                    </div>
-                                </div>
+                                <input 
+                                    type="text" 
+                                    value={licenseCode} 
+                                    onChange={(e) => setLicenseCode(e.target.value)}
+                                    placeholder="CÓDIGO DE ACCESO..."
+                                    className={`w-full border p-7 rounded-[2rem] text-center font-mono text-xs tracking-[0.3em] outline-none transition-all ${isDark ? 'bg-[#0b0b0d] text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-orange-100'}`}
+                                />
                                 <div className="flex flex-col gap-4">
-                                    <button onClick={() => saveKey(apiKey)} className="w-full bg-lime-500 text-white py-6 rounded-[2rem] font-bold hover:bg-lime-600 shadow-xl shadow-lime-500/20 transition-all uppercase text-xs tracking-widest">Activar Licencia</button>
-                                    <button onClick={() => setShowSettings(false)} className={`w-full py-6 rounded-[2rem] font-bold transition-all uppercase text-xs tracking-widest ${
-                                        isDark ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                                    }`}>Regresar al Panel</button>
+                                    <button onClick={() => validateLicense(licenseCode)} className="w-full bg-lime-500 text-white py-6 rounded-[2rem] font-bold hover:bg-lime-600 shadow-xl uppercase text-xs tracking-widest">Activar Acceso</button>
+                                    <button onClick={() => setShowSettings(false)} className={`w-full py-6 rounded-[2rem] font-bold uppercase text-xs tracking-widest ${isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>Cerrar</button>
                                 </div>
                             </div>
                         </div>
