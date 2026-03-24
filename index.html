@@ -4,24 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PREDICADOR-PRO - Plataforma de Homilética Profesional</title>
-    <!-- Frameworks y Librerías Externas -->
+    <!-- Frameworks y Librerías -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- CONEXIÓN MAESTRA A FIREBASE (No tocar esta estructura) -->
+    <!-- CONEXIÓN MAESTRA A FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         
         // ========================================================================
-        // JORGE: PEGA AQUÍ TUS DATOS DE FIREBASE DESDE TU CONSOLA
+        // JORGE: PEGA AQUÍ TUS DATOS DE FIREBASE (Configuración del proyecto)
+        // Búscalos en: Configuración del proyecto -> General -> Tus apps
         // ========================================================================
         const myFirebaseConfig = {
-          apiKey: "TU_API_KEY_AQUI",
+          apiKey: "TU_API_KEY_AQUI", // Ejemplo: "AIzaSy..."
           authDomain: "TU_PROYECTO.firebaseapp.com",
           projectId: "TU_PROYECTO_ID",
           storageBucket: "TU_PROYECTO.appspot.com",
@@ -29,14 +30,15 @@
           appId: "TU_APP_ID"
         };
 
-        // Verificamos si estamos en el editor o en GitHub
-        const isCanvas = typeof __firebase_config !== 'undefined';
-        const finalConfig = isCanvas ? JSON.parse(__firebase_config) : myFirebaseConfig;
-        const finalAppId = isCanvas ? (typeof __app_id !== 'undefined' ? __app_id : 'predicador-pro-default') : 'predicador-pro-default';
+        // Verificamos si Jorge olvidó reemplazar los datos
+        window.isConfigDefault = myFirebaseConfig.apiKey === "TU_API_KEY_AQUI";
+
+        const isLocal = typeof __firebase_config !== 'undefined';
+        const finalConfig = isLocal ? JSON.parse(__firebase_config) : myFirebaseConfig;
+        const finalAppId = isLocal ? (typeof __app_id !== 'undefined' ? __app_id : 'predicador-pro-default') : 'predicador-pro-default';
 
         try {
             const app = initializeApp(finalConfig);
-            // Guardamos las herramientas en 'window.PredicadorDB' para que React las vea
             window.PredicadorDB = {
                 db: getFirestore(app),
                 auth: getAuth(app),
@@ -44,24 +46,22 @@
                 getDoc: getDoc,
                 signInAnonymously: signInAnonymously,
                 appId: finalAppId,
-                ready: true
+                ready: !window.isConfigDefault
             };
-            console.log("Firebase inicializado correctamente.");
         } catch (e) {
-            console.error("Error inicializando:", e);
             window.PredicadorDB = { ready: false, error: e.message };
         }
     </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Crimson+Pro:wght@400;600&display=swap');
-        body { font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; background-color: #0f0f12; }
-        .theological-paper { font-family: 'Crimson Pro', serif; font-size: 1.2rem; line-height: 1.8; color: #cbd5e1; }
-        .theological-paper h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin: 1.5rem 0 1rem; color: #84cc16; border-bottom: 2px solid rgba(132, 204, 22, 0.2); display: inline-block; }
-        .badge-pro { background: linear-gradient(90deg, #84cc16 0%, #bef264 100%); color: #000; font-size: 10px; padding: 2px 10px; border-radius: 99px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        body { font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; background-color: #0f0f12; color: #f8fafc; }
+        .theological-paper { font-family: 'Crimson Pro', serif; font-size: 1.25rem; line-height: 1.8; color: #cbd5e1; }
+        .badge-pro { background: linear-gradient(90deg, #84cc16 0%, #bef264 100%); color: #000; font-size: 10px; padding: 2px 12px; border-radius: 99px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
         .glass-effect { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
         .message-in { animation: slideUp 0.5s ease-out; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        textarea::placeholder { color: #475569; }
     </style>
 </head>
 <body>
@@ -71,22 +71,22 @@
         const { useState, useEffect, useRef } = React;
 
         const SYSTEM_PROMPT = `Eres el Asistente Teológico Reformado de Jorge Álvarez (PREDICADOR-PRO). 
-        MARCO: Biblia y Confesión de 1689. Tono académico y pastoral.`;
+        MARCO: Biblia (Inerrante), Confesión de Londres de 1689.
+        MISIÓN: Generar bosquejos profundos y aplicaciones pastorales. 
+        IMPORTANTE: Siempre termina con una sección de "Profundizando en el Estudio".`;
 
         const Icon = ({ name, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
             return <i data-lucide={name} className={className}></i>;
         };
 
-        const FormattedResponse = ({ text }) => {
-            return (
-                <div className="theological-paper">
-                    {text.split('\n').map((line, i) => (
-                        <p key={i} className="mb-4">{line}</p>
-                    ))}
-                </div>
-            );
-        };
+        const FormattedResponse = ({ text }) => (
+            <div className="theological-paper">
+                {text.split('\n').map((line, i) => (
+                    <p key={i} className={line.trim() ? "mb-4" : "h-4"}>{line}</p>
+                ))}
+            </div>
+        );
 
         const App = () => {
             const [messages, setMessages] = useState([]);
@@ -96,23 +96,22 @@
             const [activeKey, setActiveKey] = useState(null);
             const [isLicenseValid, setIsLicenseValid] = useState(false);
             const [showSettings, setShowSettings] = useState(!localStorage.getItem('predicador_license'));
-            const scrollRef = useRef(null);
 
-            // Función de Validación (Llamada limpia sin 'require')
             const validateLicense = async (code) => {
                 if (!code) return;
                 
-                // Esperamos un segundo a que Firebase cargue en el otro script
+                if (window.isConfigDefault) {
+                    alert("⚠️ ¡ALTO! Jorge, todavía no has pegado tus llaves de Firebase en el código. Abre tu archivo en GitHub y reemplaza los valores de 'myFirebaseConfig'.");
+                    return;
+                }
+
                 if (!window.PredicadorDB || !window.PredicadorDB.ready) {
-                    setTimeout(() => validateLicense(code), 1000);
+                    alert("Error: Firebase no está listo. Verifica tu conexión.");
                     return;
                 }
 
                 try {
-                    // 1. Entrar como anónimo (Regla de oro de Firebase)
                     await window.PredicadorDB.signInAnonymously(window.PredicadorDB.auth);
-                    
-                    // 2. Buscar la licencia en la base de datos
                     const { db, appId, doc, getDoc } = window.PredicadorDB;
                     const licenseRef = doc(db, 'artifacts', appId, 'public', 'data', 'licenses', code.trim().toUpperCase());
                     const licenseSnap = await getDoc(licenseRef);
@@ -123,10 +122,10 @@
                         localStorage.setItem('predicador_license', code.trim().toUpperCase());
                         setShowSettings(false);
                     } else {
-                        alert("Acceso denegado. Código de suscripción inactivo o incorrecto.");
+                        alert("Acceso denegado. Código de suscripción incorrecto o inactivo.");
                     }
                 } catch (err) {
-                    alert(`Error de Conexión: ${err.message}\n\nRECUERDA: Debes habilitar 'Anónimo' en Authentication de Firebase.`);
+                    alert(`Error de Conexión: ${err.message}\n\nRECUERDA: Activa 'Anónimo' en Authentication de Firebase.`);
                 }
             };
 
@@ -150,6 +149,7 @@
                         })
                     });
                     const data = await res.json();
+                    if (data.error) throw new Error(data.error.message);
                     setMessages([...newHistory, { role: 'assistant', content: data.candidates[0].content.parts[0].text }]);
                 } catch (err) {
                     alert("Error en el motor de IA. Verifique su conexión.");
@@ -168,23 +168,30 @@
                                 <p className="text-[10px] font-bold tracking-[0.25em] text-slate-500">SOLI DEO GLORIA</p>
                             </div>
                         </div>
-                        <span className="badge-pro">{isLicenseValid ? 'PRO' : 'LOCK'}</span>
+                        <span className="badge-pro">{isLicenseValid ? 'PRO' : 'BLOQUEADO'}</span>
                     </header>
 
-                    <main ref={scrollRef} className="flex-1 overflow-y-auto p-12 space-y-12">
+                    <main className="flex-1 overflow-y-auto p-12 space-y-12 scroll-smooth">
                         {messages.length === 0 && (
-                            <div className="flex flex-col items-center justify-center h-full text-center opacity-20">
+                            <div className="flex flex-col items-center justify-center h-full text-center opacity-20 message-in">
                                 <Icon name="book-marked" className="w-32 h-32 mb-8 text-lime-500" />
                                 <h2 className="text-5xl font-extrabold italic text-white tracking-tighter">Estudio Teológico</h2>
+                                <p className="mt-4 text-slate-400">"Escudriñad las Escrituras..."</p>
                             </div>
                         )}
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex flex-col message-in ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                <div className={`p-8 rounded-[2.5rem] max-w-[90%] border ${msg.role === 'user' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-[#1a1a20] border-slate-800'}`}>
-                                    <FormattedResponse text={msg.content} />
+                                <div className={`p-8 rounded-[2.5rem] max-w-[90%] border shadow-xl ${msg.role === 'user' ? 'bg-blue-600 border-blue-500 text-white rounded-tr-none' : 'bg-[#1a1a20] border-slate-800 rounded-tl-none'}`}>
+                                    {msg.role === 'user' ? <p className="italic">{msg.content}</p> : <FormattedResponse text={msg.content} />}
                                 </div>
                             </div>
                         ))}
+                        {isLoading && (
+                            <div className="flex items-center gap-3 text-lime-500 animate-pulse font-bold text-xs uppercase tracking-widest ml-4">
+                                <Icon name="loader-2" className="w-5 h-5 animate-spin" />
+                                <span>Consultando el Oráculo...</span>
+                            </div>
+                        )}
                     </main>
 
                     <footer className="p-8 border-t border-slate-800 bg-[#1a1a20]">
@@ -194,26 +201,32 @@
                                 onChange={(e) => setInput(e.target.value)}
                                 placeholder="Escribe tu consulta bíblica aquí..."
                                 disabled={!isLicenseValid}
-                                className="w-full bg-[#0b0b0d] border border-slate-700 rounded-[2rem] px-8 py-6 text-white outline-none focus:ring-2 focus:ring-lime-500 transition-all"
+                                className="w-full bg-[#0b0b0d] border border-slate-700 rounded-[2rem] px-8 py-6 text-white outline-none focus:ring-2 focus:ring-lime-500 transition-all resize-none"
                                 rows="1"
                             />
-                            <button onClick={handleSend} className="p-7 rounded-[2rem] bg-lime-500 text-black hover:bg-lime-400 transition-all shadow-lg shadow-lime-500/20"><Icon name="send" className="w-7 h-7" /></button>
+                            <button onClick={handleSend} disabled={isLoading || !input.trim()} className="p-7 rounded-[2rem] bg-lime-500 text-black hover:bg-lime-400 transition-all shadow-lg active:scale-95 disabled:opacity-30">
+                                <Icon name="send" className="w-7 h-7" />
+                            </button>
                         </div>
                     </footer>
 
                     {showSettings && (
                         <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-3xl">
-                            <div className="p-16 rounded-[4rem] border border-slate-800 bg-[#1a1a20] text-center space-y-12 max-w-md w-full shadow-2xl">
+                            <div className="p-16 rounded-[4rem] border border-slate-800 bg-[#1a1a20] text-center space-y-10 max-w-md w-full shadow-2xl">
                                 <Icon name="shield-check" className="w-24 h-24 mx-auto text-lime-500" />
-                                <h3 className="text-4xl font-black uppercase text-white tracking-tighter">Mi Suscripción</h3>
+                                <div className="space-y-4">
+                                    <h3 className="text-4xl font-black uppercase text-white tracking-tighter leading-none">Mi Cuenta</h3>
+                                    <p className="text-sm text-slate-400 px-4">Ingrese su código de acceso único de PREDICADOR-PRO.</p>
+                                </div>
                                 <input 
                                     type="text" 
                                     value={licenseCode} 
                                     onChange={(e) => setLicenseCode(e.target.value)}
-                                    placeholder="CÓDIGO DE ACCESO..."
-                                    className="w-full border p-8 rounded-[2rem] text-center bg-[#0b0b0d] border-slate-700 text-white font-mono tracking-widest outline-none focus:border-lime-500 transition-all"
+                                    placeholder="CÓDIGO..."
+                                    className="w-full border p-8 rounded-[2rem] text-center bg-[#0b0b0d] border-slate-700 text-white font-mono tracking-widest outline-none focus:border-lime-500"
                                 />
-                                <button onClick={() => validateLicense(licenseCode)} className="w-full bg-lime-500 text-black py-6 rounded-[2.5rem] font-bold uppercase tracking-widest shadow-xl shadow-lime-500/20">Activar Acceso</button>
+                                <button onClick={() => validateLicense(licenseCode)} className="w-full bg-lime-500 text-black py-7 rounded-[2.5rem] font-bold uppercase tracking-widest shadow-xl">Activar Acceso</button>
+                                <button onClick={() => setShowSettings(false)} className="text-[10px] uppercase font-bold text-slate-600 hover:text-slate-400 transition-colors">Volver</button>
                             </div>
                         </div>
                     )}
