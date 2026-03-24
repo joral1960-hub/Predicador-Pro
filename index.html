@@ -79,12 +79,13 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        const SYSTEM_PROMPT = `Eres el Asistente Teológico Reformado de Jorge Álvarez. 
+        const SYSTEM_PROMPT = `Eres el Asistente Teológico Reformado de Jorge Álvarez (PREDICADOR-PRO). 
         Misión: Generar bosquejos de sermones profundos y estudios bíblicos con formato impecable.
         Marco: Biblia (Autoridad Suprema), Confesión de Fe de Londres de 1689.
         Formato Visual: Usa títulos (##), subtítulos (###) y negritas (**) para resaltar conceptos clave.
         Proceso: Contexto, Exégesis, Doctrina, Evangelio, Aplicación y Bosquejo.
-        Importante: Responde siempre en español con un tono pastoral y académico.`;
+        CRÍTICO: Al final de cada respuesta, incluye SIEMPRE una sección titulada "## Profundizando en el Estudio" con 3 temas sugeridos o preguntas de seguimiento para que el usuario pueda repreguntar.
+        Importante: Responde siempre en español con un tono pastoral y académico. Mantén la memoria de la conversación.`;
 
         const Icon = ({ name, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
@@ -206,7 +207,7 @@
                             body: JSON.stringify({
                                 contents: [
                                     { role: 'user', parts: [{ text: `INSTRUCCIONES: ${SYSTEM_PROMPT}.` }] },
-                                    { role: 'model', parts: [{ text: "Entendido. Soy el asistente de Jorge Álvarez. Base de datos activa." }] },
+                                    { role: 'model', parts: [{ text: "Entendido. Soy el asistente de Jorge Álvarez. Base de datos activa y listo para sugerir temas de profundización." }] },
                                     ...currentHistory.map(m => ({
                                         role: m.role === 'assistant' ? 'model' : 'user',
                                         parts: [{ text: m.content }]
@@ -265,7 +266,7 @@
                             </div>
                             <div>
                                 <h1 className={`text-xl font-bold tracking-tight leading-none mb-1.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                    Asistente del Predicador <span className="text-[10px] ml-2 opacity-50 font-mono italic">v27.0</span>
+                                    Asistente del Predicador <span className="text-[10px] ml-2 opacity-50 font-mono italic">v28.0</span>
                                 </h1>
                                 <p className={`text-[10px] font-bold tracking-[0.25em] uppercase ${isDark ? 'text-lime-500/60' : 'text-lime-700/60'}`}>Soli Deo Gloria</p>
                             </div>
@@ -307,7 +308,7 @@
                                     <h2 className={`text-4xl font-bold tracking-[0.6em] ${isDark ? 'text-white' : 'text-slate-900'}`}>PREDICADOR-PRO</h2>
                                     <p className={`text-base max-w-sm mx-auto italic font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                                         "Lámpara es a mis pies tu palabra..." <br/> 
-                                        <span className="text-xs uppercase tracking-widest mt-4 block">Escribe o usa el micrófono para comenzar un nuevo análisis doctrinal.</span>
+                                        <span className="text-xs uppercase tracking-widest mt-4 block">Análisis doctrinal interactivo con sugerencias de profundización.</span>
                                     </p>
                                 </div>
                             </div>
@@ -403,7 +404,7 @@
                                 </div>
                                 <div className="space-y-3">
                                     <h3 className={`text-3xl font-bold tracking-tighter uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>Configuración</h3>
-                                    <p className={`text-sm px-6 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Versión 27.0 - Edición PREDICADOR-PRO.</p>
+                                    <p className={`text-sm px-6 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Versión 28.0 - Edición PREDICADOR-PRO con sugerencias inteligentes.</p>
                                 </div>
                                 <input 
                                     type="password" 
