@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente del Predicador v12.0 - Rescate</title>
-    <!-- Herramientas de diseño -->
+    <title>Asistente del Predicador v13.0 - Final</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React y Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Iconos Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -16,7 +18,7 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #1a1a20; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        .chat-glow { box-shadow: 0 0 20px rgba(132, 204, 22, 0.05); }
+        .glow-border { border: 1px solid rgba(132, 204, 22, 0.2); box-shadow: 0 0 15px rgba(132, 204, 22, 0.05); }
     </style>
 </head>
 <body>
@@ -26,18 +28,16 @@
         const { useState, useEffect, useRef } = React;
 
         const MI_BIBLIOTECA_TEOLOGICA = `
-        BASE DE DATOS PROPIA DE JORGE ÁLVAREZ:
-        1. Confesión de Fe de Londres de 1689.
-        2. John Gill - "The Cause of God and Truth".
-        3. Comentarios de Matthew Henry y Juan Calvino.
-        4. Obras de Charles Spurgeon y Martyn Lloyd-Jones.
+        BIBLIOTECA DE JORGE ÁLVAREZ CARGADA:
+        - Confesión de Fe de Londres de 1689.
+        - John Gill, Matthew Henry, Juan Calvino, Spurgeon.
         `;
 
-        const SYSTEM_PROMPT = `Actúa como un Asistente Teológico Reformado con 30 años de experiencia. 
-        FUENTES: ${MI_BIBLIOTECA_TEOLOGICA}. 
-        MARCO DOCTRINAL: Biblia como autoridad suprema, Confesión de 1689. 
-        PROCESO: Contexto, Exégesis, Doctrina, Evangelio, Aplicación, Bosquejo.
-        IMPORTANTE: Responde siempre en español. No pierdas el hilo de la conversación.`;
+        const SYSTEM_PROMPT = `Actúa como un Asistente Teológico Reformado (30 años exp). 
+        CONTEXTO: ${MI_BIBLIOTECA_TEOLOGICA}. 
+        MARCO: Biblia (Autoridad Suprema), Teología Reformada, Confesión 1689. 
+        PROCESO: 1. Contexto, 2. Exégesis, 3. Doctrina, 4. Evangelio, 5. Aplicación, 6. Bosquejo.
+        IMPORTANTE: Responde en español. Sé pastoral y serio.`;
 
         const Icon = ({ name, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
@@ -50,7 +50,7 @@
             const [isLoading, setIsLoading] = useState(false);
             const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
             const [showSettings, setShowSettings] = useState(false);
-            const [debugInfo, setDebugInfo] = useState('');
+            const [status, setStatus] = useState('');
             const scrollRef = useRef(null);
 
             useEffect(() => {
@@ -62,46 +62,42 @@
                 setApiKey(cleanKey);
                 localStorage.setItem('gemini_api_key', cleanKey);
                 setShowSettings(false);
-                alert("Llave guardada. ¡Probando motores!");
+                alert("Llave guardada. ¡Probando motores v13.0!");
             };
 
-            const callGeminiWithRetry = async (currentMessages) => {
-                // Lista de motores para intentar uno por uno si fallan
-                const attempts = [
-                    { ver: 'v1', model: 'gemini-1.5-flash' },
-                    { ver: 'v1beta', model: 'gemini-1.5-flash' },
-                    { ver: 'v1', model: 'gemini-pro' },
-                    { ver: 'v1beta', model: 'gemini-1.5-pro' }
+            const callGemini = async (currentMessages) => {
+                // Lista de intentos con diferentes formatos de URL que Google acepta
+                const configs = [
+                    { url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}` },
+                    { url: `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}` },
+                    { url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}` }
                 ];
 
                 let lastError = '';
 
-                for (const attempt of attempts) {
+                for (let i = 0; i < configs.length; i++) {
                     try {
-                        setDebugInfo(`Probando ${attempt.model} (${attempt.ver})...`);
-                        const url = `https://generativelanguage.googleapis.com/${attempt.ver}/models/${attempt.model}:generateContent?key=${apiKey}`;
-                        
-                        const contents = [
-                            { role: 'user', parts: [{ text: `IDENTIDAD: ${SYSTEM_PROMPT}. ¿Entendido?` }] },
-                            { role: 'model', parts: [{ text: "Entendido. Soy su asistente reformado." }] },
-                            ...currentMessages.map(m => ({
-                                role: m.role === 'assistant' ? 'model' : 'user',
-                                parts: [{ text: m.content }]
-                            }))
-                        ];
-
-                        const response = await fetch(url, {
+                        setStatus(`Intento ${i + 1} de 3...`);
+                        const response = await fetch(configs[i].url, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ contents })
+                            body: JSON.stringify({
+                                contents: [
+                                    { role: 'user', parts: [{ text: `INSTRUCCIÓN MAESTRA: ${SYSTEM_PROMPT}. Confirma recepción.` }] },
+                                    { role: 'model', parts: [{ text: "Entendido. Sistema listo." }] },
+                                    ...currentMessages.map(m => ({
+                                        role: m.role === 'assistant' ? 'model' : 'user',
+                                        parts: [{ text: m.content }]
+                                    }))
+                                ]
+                            })
                         });
 
-                        if (response.ok) {
-                            const data = await response.json();
-                            return data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        const data = await response.json();
+                        if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                            return data.candidates[0].content.parts[0].text;
                         } else {
-                            const errData = await response.json();
-                            lastError = errData.error?.message || 'Error desconocido';
+                            lastError = data.error?.message || "Sin respuesta legible";
                         }
                     } catch (e) {
                         lastError = e.message;
@@ -118,56 +114,54 @@
                 setMessages(newMsgs);
                 setInput('');
                 setIsLoading(true);
-                setDebugInfo('Iniciando conexión...');
+                setStatus('Iniciando...');
 
                 try {
-                    const aiRes = await callGeminiWithRetry(newMsgs);
-                    if (aiRes) {
-                        setMessages([...newMsgs, { role: 'assistant', content: aiRes }]);
-                    } else {
-                        throw new Error("Respuesta vacía.");
-                    }
+                    const aiRes = await callGemini(newMsgs);
+                    setMessages([...newMsgs, { role: 'assistant', content: aiRes }]);
                 } catch (err) {
-                    setMessages([...newMsgs, { role: 'assistant', content: `❌ AGOTADOS TODOS LOS INTENTOS. \nÚltimo error: "${err.message}". \n\nJorge, por favor asegúrate de que la API KEY sea la correcta y que no tenga espacios.` }]);
+                    setMessages([...newMsgs, { role: 'assistant', content: `❌ ERROR FINAL: "${err.message}". \n\nJorge, si este error persiste tras 13 versiones, es probable que Google haya bloqueado temporalmente tu API Key por demasiados intentos fallidos o que haya un problema con la región. Intenta crear una LLAVE NUEVA en Google AI Studio.` }]);
                 } finally {
                     setIsLoading(false);
-                    setDebugInfo('');
+                    setStatus('');
                 }
             };
 
             return (
-                <div className="flex flex-col h-screen max-w-4xl mx-auto bg-[#0f0f12] border-x border-slate-800 shadow-2xl overflow-hidden text-slate-200">
-                    <header className="flex items-center justify-between px-6 py-4 bg-[#1a1a20] border-b border-slate-800 shrink-0 shadow-lg z-10">
+                <div className="flex flex-col h-screen max-w-4xl mx-auto bg-[#0f0f12] border-x border-slate-800 shadow-2xl overflow-hidden">
+                    <header className="flex items-center justify-between px-6 py-4 bg-[#1a1a20] border-b border-slate-800 shrink-0 z-10 shadow-xl">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-lime-500/10 rounded-lg text-lime-400 border border-lime-500/20 shadow-[0_0_15px_rgba(132,204,22,0.1)]">
+                            <div className="p-2 bg-lime-500/10 rounded-lg text-lime-400 border border-lime-500/20">
                                 <Icon name="shield" className="w-6 h-6" />
                             </div>
                             <div>
-                                <h1 className="text-lg font-bold text-white tracking-tight">Asistente Predicador <span className="text-lime-500 text-xs ml-1 font-mono uppercase">v12.0 Rescate</span></h1>
+                                <h1 className="text-lg font-bold text-white tracking-tight">Asistente Predicador <span className="text-lime-500 text-xs ml-1 font-mono uppercase">v13.0</span></h1>
                                 <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Tradición Reformada • 1689</p>
                             </div>
                         </div>
                         <div className="flex gap-2">
                             <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"><Icon name="settings" className="w-5 h-5" /></button>
-                            <button onClick={() => { if(confirm("¿Limpiar historial?")) setMessages([]); }} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"><Icon name="refresh-cw" className="w-5 h-5" /></button>
+                            <button onClick={() => setMessages([])} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"><Icon name="refresh-cw" className="w-5 h-5" /></button>
                         </div>
                     </header>
 
-                    <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-[#0f0f12] chat-glow">
+                    <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-[#0f0f12]">
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center h-full text-center space-y-6 opacity-40">
-                                <div className="p-8 bg-slate-800/30 rounded-full border border-lime-500/20 shadow-2xl">
+                                <div className="p-8 bg-slate-800/30 rounded-full border border-lime-500/20 glow-border">
                                     <Icon name="book-open" className="w-20 h-20 text-lime-500" />
                                 </div>
                                 <div className="space-y-2">
                                     <h2 className="text-2xl font-bold text-white tracking-widest uppercase">SOLI DEO GLORIA</h2>
-                                    <p className="text-sm max-w-xs mx-auto italic text-slate-400">Versión de Emergencia 12.0. Esta versión probará 4 configuraciones distintas antes de rendirse.</p>
+                                    <p className="text-sm max-w-xs mx-auto italic text-slate-400 leading-relaxed">
+                                        Versión 13.0. Si esta falla, te sugiero generar una clave nueva en Google AI Studio.
+                                    </p>
                                 </div>
                             </div>
                         )}
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                <div className={`p-4 rounded-2xl max-w-[95%] md:max-w-[85%] whitespace-pre-wrap leading-relaxed shadow-lg text-sm md:text-base ${
+                                <div className={`p-5 rounded-2xl max-w-[95%] md:max-w-[85%] whitespace-pre-wrap leading-relaxed shadow-xl text-sm md:text-base ${
                                     msg.role === 'user' ? 'bg-blue-700 text-white rounded-tr-none' : 'bg-[#1a1a20] border border-slate-800 text-slate-200 rounded-tl-none'
                                 }`}>
                                     {msg.content}
@@ -175,9 +169,9 @@
                                 {msg.role === 'assistant' && !msg.content.includes('❌') && (
                                     <button 
                                         onClick={() => { navigator.clipboard.writeText(msg.content); alert("¡Copiado!"); }} 
-                                        className="mt-2 text-[10px] font-bold text-slate-500 hover:text-lime-500 flex items-center gap-1 ml-2 transition-colors uppercase bg-slate-800/40 px-2 py-1 rounded"
+                                        className="mt-3 text-[10px] font-bold text-slate-500 hover:text-lime-500 flex items-center gap-2 ml-2 transition-colors uppercase bg-slate-800/40 px-3 py-1.5 rounded-lg border border-slate-700/50"
                                     >
-                                        <Icon name="copy" className="w-3 h-3" /> Copiar Bosquejo
+                                        <Icon name="copy" className="w-3.5 h-3.5" /> Copiar Bosquejo
                                     </button>
                                 )}
                             </div>
@@ -186,9 +180,9 @@
                             <div className="flex flex-col gap-2 items-start px-2">
                                 <div className="flex gap-4 items-center text-slate-500 text-sm italic animate-pulse">
                                     <Icon name="loader-2" className="w-5 h-5 animate-spin text-lime-500" />
-                                    Buscando conexión con Google...
+                                    Llamando al motor teológico...
                                 </div>
-                                <div className="text-[10px] text-lime-500/50 font-mono ml-9">{debugInfo}</div>
+                                <div className="text-[10px] text-lime-500/50 font-mono ml-9">{status}</div>
                             </div>
                         )}
                     </main>
@@ -200,7 +194,7 @@
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
                                 placeholder="Ingresa un pasaje o tema..."
-                                className="w-full bg-[#0b0b0d] text-white border border-slate-700 rounded-2xl px-6 py-4 outline-none focus:border-lime-500 transition-all resize-none shadow-inner text-sm md:text-base"
+                                className="w-full bg-[#0b0b0d] text-white border border-slate-700 rounded-2xl px-6 py-4 outline-none focus:border-lime-500 transition-all resize-none shadow-inner text-sm md:text-base min-h-[56px]"
                                 rows="1"
                             />
                             <button onClick={handleSend} disabled={isLoading} className={`p-5 rounded-2xl transition-all shadow-lg active:scale-95 ${isLoading ? 'bg-slate-800 text-slate-500' : 'bg-lime-500 text-black hover:bg-lime-400'}`}>
@@ -212,10 +206,10 @@
                     {showSettings && (
                         <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-md text-center">
                             <div className="bg-[#1a1a20] p-8 rounded-3xl border border-slate-800 max-w-sm w-full space-y-6 shadow-2xl">
-                                <Icon name="key" className="w-12 h-12 text-lime-400 mx-auto" />
-                                <h3 className="text-xl font-bold text-white uppercase tracking-tighter">Activar Motor IA</h3>
-                                <p className="text-xs text-slate-400 leading-relaxed">
-                                    Introduce tu API Key. La v12.0 intentará múltiples métodos de conexión automáticamente.
+                                <Icon name="key" className="w-14 h-14 text-lime-400 mx-auto mb-2" />
+                                <h3 className="text-xl font-bold text-white uppercase tracking-tighter">Motor v13.0</h3>
+                                <p className="text-xs text-slate-400 leading-relaxed px-2">
+                                    Si sigue fallando, borra tu llave de Google AI Studio y crea una TOTALMENTE NUEVA.
                                 </p>
                                 <input 
                                     type="password" 
