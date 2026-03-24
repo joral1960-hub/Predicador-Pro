@@ -4,21 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PREDICADOR-PRO - Plataforma de Homilética Profesional</title>
+    <!-- Frameworks y Librerías -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
+    <!-- Firebase SaaS Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // =========================================================
+        // JORGE: PEGA AQUÍ TUS DATOS DE FIREBASE (Configuración del proyecto)
+        // =========================================================
+        const myFirebaseConfig = {
+          apiKey: "TU_API_KEY_AQUI",
+          authDomain: "TU_PROYECTO.firebaseapp.com",
+          projectId: "TU_PROYECTO_ID",
+          storageBucket: "TU_PROYECTO.appspot.com",
+          messagingSenderId: "TU_SENDER_ID",
+          appId: "TU_APP_ID"
+        };
+
+        // Si estamos en GitHub, usamos tu config. Si estamos en el editor, usa la del entorno.
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'predicador-pro-default';
-        const app = initializeApp(firebaseConfig);
         
+        const app = initializeApp(firebaseConfig);
         window.db = getFirestore(app);
         window.auth = getAuth(app);
         window.app_id = appId;
@@ -54,7 +69,8 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        const SYSTEM_PROMPT = `Eres el Asistente Teológico Reformado de Jorge Álvarez (PREDICADOR-PRO). MARCO: Biblia y Confesión de 1689. Al final incluye siempre "## Profundizando en el Estudio".`;
+        const SYSTEM_PROMPT = `Eres el Asistente Teológico Reformado de Jorge Álvarez (PREDICADOR-PRO).
+        MARCO: Biblia (Inerrante), Confesión de Londres de 1689. Al final incluye "## Profundizando en el Estudio".`;
 
         const Icon = ({ name, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
@@ -65,18 +81,9 @@
             const lines = text.split('\n');
             return (
                 <div className="theological-paper">
-                    {lines.map((line, i) => {
-                        if (line.startsWith('## ')) return <h2 key={i}>{line.replace('## ', '')}</h2>;
-                        if (line.startsWith('### ')) return <h3 key={i}>{line.replace('### ', '')}</h3>;
-                        if (line.startsWith('- ') || line.startsWith('* ')) return <li key={i} className="ml-6 mb-2 list-disc">{line.substring(2)}</li>;
-                        if (line.trim() === '') return <div key={i} className="h-4"></div>;
-                        const parts = line.split(/(\*\*.*?\*\*)/g);
-                        return (
-                            <p key={i} className="mb-4">
-                                {parts.map((part, j) => part.startsWith('**') && part.endsWith('**') ? <strong key={j}>{part.slice(2, -2)}</strong> : part)}
-                            </p>
-                        );
-                    })}
+                    {lines.map((line, i) => (
+                        <p key={i} className="mb-4">{line}</p>
+                    ))}
                 </div>
             );
         };
@@ -88,36 +95,31 @@
             const [licenseCode, setLicenseCode] = useState(localStorage.getItem('predicador_license') || '');
             const [activeKey, setActiveKey] = useState(null);
             const [isLicenseValid, setIsLicenseValid] = useState(false);
-            const [theme, setTheme] = useState(localStorage.getItem('app_theme') || 'dark');
             const [showSettings, setShowSettings] = useState(!localStorage.getItem('predicador_license'));
-            const [status, setStatus] = useState('');
-            const scrollRef = useRef(null);
-
-            useEffect(() => {
-                if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-                localStorage.setItem('app_theme', theme);
-                document.body.className = theme === 'dark' ? 'dark-mode' : 'light-mode';
-            }, [messages, isLoading, theme]);
 
             const validateLicense = async (code) => {
                 if (!code) return;
-                setStatus("Autenticando...");
                 try {
                     const { signInAnonymously } = await import("https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js");
                     const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js");
+                    
                     await signInAnonymously(window.auth);
+                    
                     const licenseRef = doc(window.db, 'artifacts', window.app_id, 'public', 'data', 'licenses', code.trim().toUpperCase());
                     const licenseSnap = await getDoc(licenseRef);
-                    if (licenseSnap.exists()) {
-                        const data = licenseSnap.data();
-                        if (data.active === true) {
-                            setActiveKey(data.apiKey);
-                            setIsLicenseValid(true);
-                            localStorage.setItem('predicador_license', code.trim().toUpperCase());
-                            setShowSettings(false);
-                        } else { alert("Suscripción Finalizada."); setIsLicenseValid(false); }
-                    } else { alert("Licencia no encontrada."); setIsLicenseValid(false); }
-                } catch (err) { alert("Error de servidor."); } finally { setStatus(""); }
+                    
+                    if (licenseSnap.exists() && licenseSnap.data().active === true) {
+                        setActiveKey(licenseSnap.data().apiKey);
+                        setIsLicenseValid(true);
+                        localStorage.setItem('predicador_license', code.trim().toUpperCase());
+                        setShowSettings(false);
+                    } else {
+                        alert("Licencia no válida o inactiva.");
+                    }
+                } catch (err) {
+                    alert("Error de servidor. Verifique su configuración de Firebase.");
+                    console.error(err);
+                }
             };
 
             useEffect(() => { if (licenseCode) validateLicense(licenseCode); }, []);
@@ -135,79 +137,71 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ role: 'user', parts: [{ text: `INSTRUCCIONES: ${SYSTEM_PROMPT}.` }] },
-                            { role: 'model', parts: [{ text: "Licencia verificada. PREDICADOR-PRO listo." }] },
-                            ...newHistory.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }))]
+                            contents: [{ role: 'user', parts: [{ text: SYSTEM_PROMPT + "\n" + input }] }]
                         })
                     });
                     const data = await res.json();
                     setMessages([...newHistory, { role: 'assistant', content: data.candidates[0].content.parts[0].text }]);
-                } catch (err) { setMessages([...newHistory, { role: 'assistant', content: `❌ Error de conexión.` }]);
-                } finally { setIsLoading(false); }
+                } catch (err) { alert("Error en el motor de IA."); } finally { setIsLoading(false); }
             };
 
-            const isDark = theme === 'dark';
+            const isDark = true;
 
             return (
-                <div className={`flex flex-col h-screen max-w-5xl mx-auto border-x shadow-2xl relative overflow-hidden transition-all duration-700 ${isDark ? 'bg-[#0f0f12] border-slate-800 text-slate-200' : 'bg-[#fcfaf7] border-orange-100 text-slate-800'}`}>
-                    <header className={`flex items-center justify-between px-8 py-6 border-b shrink-0 z-30 glass-effect sticky top-0 ${isDark ? 'bg-[#1a1a20]/80 border-slate-800' : 'bg-white/70 border-orange-100 shadow-sm'}`}>
+                <div className="flex flex-col h-screen max-w-5xl mx-auto border-x bg-[#0f0f12] text-slate-200">
+                    <header className="flex items-center justify-between px-8 py-6 border-b bg-[#1a1a20]/80 glass-effect">
                         <div className="flex items-center gap-5">
-                            <div className={`p-3 rounded-2xl border shadow-xl ${isDark ? 'bg-lime-500/10 text-lime-400 border-lime-500/20' : 'bg-lime-600 text-white border-lime-700'}`}><Icon name="shield" className="w-6 h-6" /></div>
+                            <div className="p-3 rounded-2xl bg-lime-500/10 text-lime-400 border border-lime-500/20"><Icon name="shield" className="w-6 h-6" /></div>
                             <div>
-                                <div className="flex items-center gap-3 mb-1">
-                                    <h1 className="text-xl font-bold tracking-tight">PREDICADOR-PRO</h1>
-                                    <span className="badge-pro">{isLicenseValid ? 'PRO' : 'LOCK'}</span>
-                                </div>
-                                <p className="text-[10px] font-bold tracking-[0.25em] uppercase opacity-50">Soli Deo Gloria</p>
+                                <h1 className="text-xl font-bold tracking-tight">PREDICADOR-PRO</h1>
+                                <span className="badge-pro">{isLicenseValid ? 'PRO' : 'LOCK'}</span>
                             </div>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => setTheme(isDark ? 'light' : 'dark')} className="p-3 rounded-2xl hover:bg-slate-800/50 transition-all"><Icon name={isDark ? "sun" : "moon"} className="w-5 h-5" /></button>
-                            <button onClick={() => setShowSettings(true)} className="p-3 rounded-2xl hover:bg-slate-800/50 transition-all"><Icon name="user-check" className="w-5 h-5" /></button>
-                            <button onClick={() => setMessages([])} className="p-3 rounded-2xl hover:bg-slate-800/50 transition-all"><Icon name="refresh-cw" className="w-5 h-5" /></button>
-                        </div>
                     </header>
-                    <main ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-16 space-y-12">
+
+                    <main className="flex-1 overflow-y-auto p-16 space-y-12">
                         {messages.length === 0 && (
-                            <div className="flex flex-col items-center justify-center h-full text-center space-y-10 message-in">
-                                <div className="emblem-container">
-                                    <div className="emblem-ring w-48 h-48 border-dashed"></div>
-                                    <div className={`relative p-12 rounded-full border-2 ${isDark ? 'bg-slate-800/10 border-lime-500/10' : 'bg-white border-lime-500/10 shadow-sm'}`}><Icon name="book-marked" className={`w-32 h-32 ${isDark ? 'text-lime-500/20' : 'text-lime-600/20'}`} /></div>
-                                </div>
-                                <h2 className="text-5xl font-extrabold tracking-tighter" style={{ fontFamily: "'Playfair Display', serif" }}>Estudio Teológico</h2>
-                                <p className="text-lg opacity-60 italic" style={{ fontFamily: "'Crimson Pro', serif" }}>"Trae los libros, pero especialmente los pergaminos..."</p>
+                            <div className="flex flex-col items-center justify-center h-full text-center space-y-10">
+                                <Icon name="book-marked" className="w-32 h-32 opacity-20 text-lime-500" />
+                                <h2 className="text-5xl font-extrabold tracking-tighter italic">Estudio Teológico</h2>
                             </div>
                         )}
                         {messages.map((msg, i) => (
-                            <div key={i} className={`flex flex-col message-in ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                <div className={`p-8 rounded-[2.5rem] max-w-[95%] md:max-w-[90%] shadow-2xl border ${msg.role === 'user' ? 'bg-blue-600 border-blue-500 text-white rounded-tr-none shadow-blue-500/20' : (isDark ? 'bg-[#1a1a20] border-slate-800 text-slate-200' : 'bg-white border-orange-100 text-slate-800')}`}>
-                                    {msg.role === 'user' ? <p className="text-lg italic leading-relaxed whitespace-pre-wrap">{msg.content}</p> : <FormattedResponse text={msg.content} />}
+                            <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                                <div className={`p-8 rounded-[2.5rem] max-w-[90%] border ${msg.role === 'user' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-[#1a1a20] border-slate-800'}`}>
+                                    <FormattedResponse text={msg.content} />
                                 </div>
                             </div>
                         ))}
                     </main>
-                    <footer className={`p-8 border-t shrink-0 z-20 ${isDark ? 'bg-[#1a1a20] border-slate-800' : 'bg-white border-orange-100'}`}>
-                        <div className="max-w-4xl mx-auto flex flex-col gap-4">
-                            <div className="flex gap-4 items-end">
-                                <textarea
-                                    value={input} onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                                    placeholder={isLicenseValid ? "Escribe o dicta el pasaje aquí..." : "Verifique su licencia"}
-                                    disabled={!isLicenseValid}
-                                    className={`w-full border rounded-[2rem] px-8 py-6 outline-none focus:ring-8 transition-all resize-none shadow-inner text-base min-h-[76px] ${isDark ? 'bg-[#0b0b0d] text-white border-slate-700 focus:ring-lime-500/5' : 'bg-slate-50 text-slate-900 border-orange-100 focus:ring-lime-500/5'}`}
-                                    rows="1"
-                                />
-                                <button onClick={handleSend} disabled={isLoading || !input.trim() || !isLicenseValid} className={`p-7 rounded-[2rem] shadow-2xl active:scale-95 ${isLoading || !input.trim() || !isLicenseValid ? 'bg-slate-500 opacity-20' : 'bg-lime-500 text-white hover:bg-lime-600'}`}><Icon name="send" className="w-7 h-7" /></button>
-                            </div>
+
+                    <footer className="p-8 border-t bg-[#1a1a20]">
+                        <div className="flex gap-4">
+                            <textarea
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                placeholder="Escribe tu consulta bíblica..."
+                                disabled={!isLicenseValid}
+                                className="w-full bg-[#0b0b0d] border border-slate-700 rounded-[2rem] px-8 py-6 outline-none focus:ring-2 focus:ring-lime-500"
+                                rows="1"
+                            />
+                            <button onClick={handleSend} className="p-7 rounded-[2rem] bg-lime-500 text-black"><Icon name="send" className="w-7 h-7" /></button>
                         </div>
                     </footer>
+
                     {showSettings && (
-                        <div className="fixed inset-0 bg-black/98 flex items-center justify-center p-4 z-50 backdrop-blur-3xl">
-                            <div className={`p-16 rounded-[4rem] border max-w-md w-full space-y-12 text-center ${isDark ? 'bg-[#1a1a20] border-slate-800 shadow-[0_0_100px_rgba(132,204,22,0.1)]' : 'bg-white border-orange-50 shadow-2xl'}`}>
+                        <div className="fixed inset-0 bg-black/98 flex items-center justify-center p-4 z-50">
+                            <div className="p-16 rounded-[4rem] border border-slate-800 bg-[#1a1a20] text-center space-y-12">
                                 <Icon name="shield-check" className="w-24 h-24 mx-auto text-lime-500" />
-                                <h3 className="text-4xl font-black uppercase tracking-tighter">Mi Suscripción</h3>
-                                <input type="text" value={licenseCode} onChange={(e) => setLicenseCode(e.target.value)} placeholder="CÓDIGO DE ACCESO..." className={`w-full border p-8 rounded-[2rem] text-center font-mono text-xs tracking-[0.5em] outline-none ${isDark ? 'bg-[#0b0b0d] text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-orange-100'}`} />
-                                <button onClick={() => validateLicense(licenseCode)} className="w-full bg-lime-500 text-white py-6 rounded-[2.5rem] font-black hover:bg-lime-600 shadow-xl uppercase text-xs tracking-widest transition-all">Activar Suscripción</button>
+                                <h3 className="text-4xl font-black uppercase">Mi Suscripción</h3>
+                                <input 
+                                    type="text" 
+                                    value={licenseCode} 
+                                    onChange={(e) => setLicenseCode(e.target.value)}
+                                    placeholder="CÓDIGO DE ACCESO..."
+                                    className="w-full border p-8 rounded-[2rem] text-center bg-[#0b0b0d] border-slate-700 text-white"
+                                />
+                                <button onClick={() => validateLicense(licenseCode)} className="w-full bg-lime-500 text-black py-6 rounded-[2.5rem] font-bold">Activar Suscripción</button>
                             </div>
                         </div>
                     )}
