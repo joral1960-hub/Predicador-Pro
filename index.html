@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente del Predicador v15.0 - Edición de Gracia</title>
+    <title>Asistente del Predicador v16.0 - Edición Definitiva</title>
+    <!-- Estilos y Herramientas -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -15,6 +16,7 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #1a1a20; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .chat-container { height: calc(100vh - 160px); }
     </style>
 </head>
 <body>
@@ -23,12 +25,14 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
+        // Configuración de Identidad y Conocimiento
         const SYSTEM_PROMPT = `Actúa como un Asistente Teológico Reformado (30 años exp). 
         MARCO: Biblia (Autoridad Suprema), Teología Reformada, Confesión 1689. 
         FUENTES: John Gill, Matthew Henry, Juan Calvino, Spurgeon.
         PROCESO: 1. Contexto, 2. Exégesis, 3. Doctrina, 4. Evangelio, 5. Aplicación, 6. Bosquejo.
-        IMPORTANTE: Responde siempre en español. Sé pastoral y profundo.`;
+        IMPORTANTE: Responde siempre en español. No pierdas el hilo de la conversación.`;
 
+        // Componente de Iconos
         const Icon = ({ name, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
             return <i data-lucide={name} className={className}></i>;
@@ -40,9 +44,10 @@
             const [isLoading, setIsLoading] = useState(false);
             const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
             const [showSettings, setShowSettings] = useState(false);
-            const [currentTry, setCurrentTry] = useState('');
+            const [status, setStatus] = useState('');
             const scrollRef = useRef(null);
 
+            // Auto-scroll al final de los mensajes
             useEffect(() => {
                 if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
             }, [messages, isLoading]);
@@ -52,33 +57,38 @@
                 setApiKey(cleanKey);
                 localStorage.setItem('gemini_api_key', cleanKey);
                 setShowSettings(false);
+                alert("Llave configurada correctamente.");
             };
 
             const callGemini = async (currentMessages) => {
-                // LISTA DE SEGURIDAD: Probamos los motores más probables de funcionar
-                const engines = [
+                // Lista de configuraciones para intentar (Multimotor)
+                const configurations = [
                     { ver: 'v1beta', model: 'gemini-1.5-flash' },
                     { ver: 'v1', model: 'gemini-1.5-flash' },
-                    { ver: 'v1beta', model: 'gemini-1.5-flash-8b' }, // Este casi nunca falla
-                    { ver: 'v1beta', model: 'gemini-1.0-pro' }
+                    { ver: 'v1beta', model: 'gemini-1.5-flash-8b' }
                 ];
 
-                let lastError = '';
+                let errorLog = '';
 
-                for (const engine of engines) {
+                for (const config of configurations) {
                     try {
-                        setCurrentTry(`Conectando vía ${engine.model}...`);
-                        const url = `https://generativelanguage.googleapis.com/${engine.ver}/models/${engine.model}:generateContent?key=${apiKey}`;
+                        setStatus(`Probando motor ${config.model}...`);
+                        const url = `https://generativelanguage.googleapis.com/${config.ver}/models/${config.model}:generateContent?key=${apiKey}`;
                         
-                        // FORMATO UNIVERSAL: Metemos las instrucciones como historial para evitar errores de campos
                         const body = {
                             contents: [
-                                { role: 'user', parts: [{ text: `INSTRUCCIONES: ${SYSTEM_PROMPT}. ¿Entendido?` }] },
-                                { role: 'model', parts: [{ text: "Entendido. Soy su asistente reformado. ¿En qué pasaje trabajaremos?" }] },
+                                { role: 'user', parts: [{ text: `INSTRUCCIONES: ${SYSTEM_PROMPT}. Confirma recepción.` }] },
+                                { role: 'model', parts: [{ text: "Entendido. Soy su asistente reformado listo para trabajar." }] },
                                 ...currentMessages.map(m => ({
                                     role: m.role === 'assistant' ? 'model' : 'user',
                                     parts: [{ text: m.content }]
                                 }))
+                            ],
+                            safetySettings: [
+                                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
                             ]
                         };
 
@@ -93,13 +103,13 @@
                         if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
                             return data.candidates[0].content.parts[0].text;
                         } else {
-                            lastError = data.error?.message || "Sin respuesta válida";
+                            errorLog += `\n- ${config.model}: ${data.error?.message || "Sin respuesta"}`;
                         }
                     } catch (e) {
-                        lastError = e.message;
+                        errorLog += `\n- ${config.model}: Error de red`;
                     }
                 }
-                throw new Error(lastError);
+                throw new Error(errorLog);
             };
 
             const handleSend = async () => {
@@ -115,41 +125,45 @@
                     const aiRes = await callGemini(newMsgs);
                     setMessages([...newMsgs, { role: 'assistant', content: aiRes }]);
                 } catch (err) {
-                    setMessages([...newMsgs, { role: 'assistant', content: `❌ ERROR DEFINITIVO: "${err.message}". \n\nJorge, si esto sigue fallando, es muy probable que tu API KEY tenga alguna restricción de Google. Por favor, asegúrate de haber pegado la llave entera.` }]);
+                    setMessages([...newMsgs, { role: 'assistant', content: `❌ ERROR TÉCNICO: Fallaron todos los intentos de conexión.\n\nDetalles:\n${err.message}\n\nSolución: Revisa tu API Key o prueba creando una nueva en Google AI Studio.` }]);
                 } finally {
                     setIsLoading(false);
-                    setCurrentTry('');
+                    setStatus('');
                 }
             };
 
             return (
                 <div className="flex flex-col h-screen max-w-4xl mx-auto bg-[#0f0f12] border-x border-slate-800 shadow-2xl overflow-hidden text-slate-200">
-                    <header className="flex items-center justify-between px-6 py-4 bg-[#1a1a20] border-b border-slate-800 shrink-0 z-10 shadow-lg">
+                    {/* Encabezado */}
+                    <header className="flex items-center justify-between px-6 py-4 bg-[#1a1a20] border-b border-slate-800 shrink-0 z-10 shadow-xl">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-lime-500/10 rounded-lg text-lime-400 border border-lime-500/20 shadow-lg shadow-lime-500/5">
+                            <div className="p-2 bg-lime-500/10 rounded-lg text-lime-400 border border-lime-500/20 shadow-lg">
                                 <Icon name="shield" className="w-6 h-6" />
                             </div>
                             <div>
-                                <h1 className="text-lg font-bold text-white tracking-tight">Asistente Predicador <span className="text-lime-500 text-xs ml-1 font-mono uppercase">v15.0</span></h1>
+                                <h1 className="text-lg font-bold text-white tracking-tight">Asistente Predicador <span className="text-lime-500 text-xs ml-1 font-mono uppercase">v16.0 Definitiva</span></h1>
                                 <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Tradición Reformada • 1689</p>
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"><Icon name="settings" className="w-5 h-5" /></button>
-                            <button onClick={() => setMessages([])} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"><Icon name="refresh-cw" className="w-5 h-5" /></button>
+                            <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors" title="Configurar API">
+                                <Icon name="settings" className="w-5 h-5" />
+                            </button>
+                            <button onClick={() => { if(confirm("¿Reiniciar estudio actual?")) setMessages([]); }} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors" title="Limpiar chat">
+                                <Icon name="refresh-cw" className="w-5 h-5" />
+                            </button>
                         </div>
                     </header>
 
+                    {/* Área de Chat */}
                     <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-[#0f0f12]">
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center h-full text-center space-y-6 opacity-40">
-                                <div className="p-8 bg-slate-800/30 rounded-full border border-lime-500/20 shadow-lg">
-                                    <Icon name="book-open" className="w-20 h-20 text-lime-500" />
-                                </div>
+                                <Icon name="book-open" className="w-20 h-20 text-lime-500" />
                                 <div className="space-y-2">
-                                    <h2 className="text-2xl font-bold text-white tracking-widest uppercase">SOLI DEO GLORIA</h2>
-                                    <p className="text-sm max-w-xs mx-auto italic text-slate-400">
-                                        Versión 15.0 (Gracia). Esta versión usa un método de inyección de mensajes infalible.
+                                    <h2 className="text-xl font-bold text-white tracking-widest uppercase">SOLI DEO GLORIA</h2>
+                                    <p className="text-sm max-w-xs mx-auto italic text-slate-400 leading-relaxed">
+                                        Escriba un pasaje bíblico para comenzar su preparación homilética.
                                     </p>
                                 </div>
                             </div>
@@ -163,8 +177,8 @@
                                 </div>
                                 {msg.role === 'assistant' && !msg.content.includes('❌') && (
                                     <button 
-                                        onClick={() => { navigator.clipboard.writeText(msg.content); alert("¡Copiado!"); }} 
-                                        className="mt-3 text-[10px] font-bold text-slate-500 hover:text-lime-500 flex items-center gap-2 ml-2 transition-colors uppercase bg-slate-800/40 px-3 py-1.5 rounded-lg border border-slate-700/50 shadow-sm"
+                                        onClick={() => { navigator.clipboard.writeText(msg.content); alert("¡Contenido copiado!"); }} 
+                                        className="mt-3 text-[10px] font-bold text-slate-500 hover:text-lime-500 flex items-center gap-2 ml-2 transition-colors uppercase bg-slate-800/40 px-3 py-1.5 rounded-lg border border-slate-700/50"
                                     >
                                         <Icon name="copy" className="w-3.5 h-3.5" /> Copiar para Word
                                     </button>
@@ -175,47 +189,49 @@
                             <div className="flex flex-col gap-2 items-start px-2">
                                 <div className="flex gap-4 items-center text-slate-500 text-sm italic animate-pulse">
                                     <Icon name="loader-2" className="w-5 h-5 animate-spin text-lime-500" />
-                                    Buscando respuesta en los motores de Google...
+                                    Consultando fuentes...
                                 </div>
-                                <div className="text-[10px] text-lime-500/50 font-mono ml-9 uppercase tracking-tighter">{currentTry}</div>
+                                <div className="text-[10px] text-lime-500/50 font-mono ml-9 uppercase tracking-tighter">{status}</div>
                             </div>
                         )}
                     </main>
 
+                    {/* Entrada de Texto */}
                     <footer className="p-4 md:p-6 bg-[#1a1a20] border-t border-slate-800 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
                         <div className="max-w-4xl mx-auto relative flex gap-2">
                             <textarea
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-                                placeholder="Escribe el pasaje bíblico o tema aquí..."
-                                className="w-full bg-[#0b0b0d] text-white border border-slate-700 rounded-2xl px-6 py-4 outline-none focus:border-lime-500 focus:ring-1 focus:ring-lime-500/20 transition-all resize-none shadow-inner text-sm md:text-base min-h-[56px]"
+                                onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                                placeholder="Escribe el pasaje o una pregunta aquí..."
+                                className="w-full bg-[#0b0b0d] text-white border border-slate-700 rounded-2xl px-6 py-4 outline-none focus:border-lime-500 transition-all resize-none shadow-inner text-sm md:text-base min-h-[56px]"
                                 rows="1"
                             />
-                            <button onClick={handleSend} disabled={isLoading} className={`p-5 rounded-2xl transition-all shadow-lg active:scale-95 ${isLoading ? 'bg-slate-800 text-slate-500' : 'bg-lime-500 text-black hover:bg-lime-400 shadow-lime-500/20'}`}>
+                            <button onClick={handleSend} disabled={isLoading || !input.trim()} className={`p-5 rounded-2xl transition-all shadow-lg active:scale-95 ${isLoading || !input.trim() ? 'bg-slate-800 text-slate-500' : 'bg-lime-500 text-black hover:bg-lime-400 shadow-lime-500/10'}`}>
                                 <Icon name="send" className="w-5 h-5" />
                             </button>
                         </div>
                     </footer>
 
+                    {/* Modal de Ajustes */}
                     {showSettings && (
                         <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-md text-center">
                             <div className="bg-[#1a1a20] p-8 rounded-3xl border border-slate-800 max-w-sm w-full space-y-6 shadow-2xl">
                                 <Icon name="key" className="w-14 h-14 text-lime-400 mx-auto mb-2" />
-                                <h3 className="text-xl font-bold text-white uppercase tracking-tighter">Motor v15.0</h3>
+                                <h3 className="text-xl font-bold text-white uppercase tracking-tighter">API Key de Google</h3>
                                 <p className="text-xs text-slate-400 leading-relaxed px-2">
-                                    Introduce tu API Key. Si falla, intenta crear una llave TOTALMENTE NUEVA en Google AI Studio.
+                                    Introduce tu llave de Google AI Studio para activar la inteligencia del asistente.
                                 </p>
                                 <input 
                                     type="password" 
                                     value={apiKey} 
                                     onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder="Pega la llave aquí..."
+                                    placeholder="AIzaSy..."
                                     className="w-full bg-[#0b0b0d] border border-slate-700 p-4 rounded-xl text-white outline-none focus:border-lime-400 text-center font-mono text-xs tracking-widest"
                                 />
-                                <div className="flex gap-3">
-                                    <button onClick={() => { saveKey(apiKey); }} className="flex-1 bg-lime-500 text-black py-3 rounded-xl font-bold hover:bg-lime-400 transition-all shadow-lg shadow-lime-500/20">Guardar</button>
-                                    <button onClick={() => setShowSettings(false)} className="flex-1 bg-slate-800 text-white py-3 rounded-xl hover:bg-slate-700">Cerrar</button>
+                                <div className="flex gap-3 pt-2">
+                                    <button onClick={() => saveKey(apiKey)} className="flex-1 bg-lime-500 text-black py-3 rounded-xl font-bold hover:bg-lime-400 shadow-lg transition-all shadow-lime-500/20">Guardar</button>
+                                    <button onClick={() => setShowSettings(false)} className="flex-1 bg-slate-800 text-white py-3 rounded-xl hover:bg-slate-700 transition-all">Cerrar</button>
                                 </div>
                             </div>
                         </div>
@@ -227,5 +243,3 @@
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
-</body>
-</html>
