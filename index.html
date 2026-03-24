@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente del Predicador v20.0 - Edición Soberana</title>
+    <title>Asistente del Predicador v21.0 - Edición Revelación</title>
     <!-- Estilos de Alta Gama -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -29,10 +29,10 @@
         const { useState, useEffect, useRef } = React;
 
         const SYSTEM_PROMPT = `Eres el Asistente Teológico Reformado de Jorge Álvarez. 
-        Misión: Generar bosquejos de sermones profundos.
-        Marco: Biblia (Autoridad Suprema), Confesión de 1689, Teología Reformada.
-        Proceso: Contexto, Exégesis, Doctrina, Evangelio, Aplicación y Bosquejo.
-        Importante: Responde siempre en español y mantén un tono pastoral.`;
+        Misión: Generar bosquejos de sermones profundos y estudios bíblicos.
+        Marco: Biblia (Autoridad Suprema), Confesión de Fe de Londres de 1689, Teología Reformada Clásica.
+        Proceso: Contexto, Exégesis, Doctrina, Evangelio, Aplicación y Bosquejo Homilético.
+        Importante: Responde siempre en español con un tono pastoral, solemne y preciso.`;
 
         const Icon = ({ name, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
@@ -57,7 +57,7 @@
                 setApiKey(clean);
                 localStorage.setItem('gemini_api_key', clean);
                 setShowSettings(false);
-                alert("Llave guardada. ¡Vamos a la batalla!");
+                alert("Llave actualizada. ¡Motor 2.5 listo!");
             };
 
             const testModels = async () => {
@@ -71,7 +71,7 @@
                             .filter(m => m.supportedGenerationMethods.includes("generateContent"))
                             .map(m => m.name.replace("models/", ""))
                             .join("\n• ");
-                        alert("¡CONEXIÓN EXITOSA!\n\nMotores que puedes usar:\n• " + list);
+                        alert("¡CONEXIÓN EXITOSA!\n\nMotores detectados en tu cuenta:\n• " + list);
                     } else {
                         alert("Error de Google: " + (data.error?.message || "Llave inválida"));
                     }
@@ -81,35 +81,29 @@
             };
 
             const callGemini = async (currentHistory) => {
-                // Versión 20.0: Intentamos los 4 formatos de nombre más comunes
+                // Versión 21.0: Usamos EXACTAMENTE los nombres que tu diagnóstico mostró como disponibles
                 const attempts = [
+                    { v: 'v1beta', m: 'gemini-2.5-flash' }, // Tu primera opción exitosa
+                    { v: 'v1beta', m: 'gemini-2.0-flash' }, // Tu segunda opción exitosa
                     { v: 'v1beta', m: 'gemini-1.5-flash' },
-                    { v: 'v1', m: 'gemini-1.5-flash' },
-                    { v: 'v1beta', m: 'gemini-1.5-pro' },
-                    { v: 'v1beta', m: 'gemini-1.0-pro' }
+                    { v: 'v1', m: 'gemini-1.5-flash' }
                 ];
 
                 let lastError = "";
 
                 for (const attempt of attempts) {
                     try {
-                        setStatus(`Iniciando motor ${attempt.m}...`);
+                        setStatus(`Llamando al motor ${attempt.m}...`);
                         const url = `https://generativelanguage.googleapis.com/${attempt.v}/models/${attempt.m}:generateContent?key=${apiKey}`;
                         
                         const body = {
                             contents: [
-                                { role: 'user', parts: [{ text: `INSTRUCCIONES: ${SYSTEM_PROMPT}. Confirma.` }] },
-                                { role: 'model', parts: [{ text: "Entendido. Soy el asistente de Jorge Álvarez. ¿En qué pasaje trabajaremos?" }] },
+                                { role: 'user', parts: [{ text: `INSTRUCCIONES DE IDENTIDAD: ${SYSTEM_PROMPT}. Confirma disponibilidad.` }] },
+                                { role: 'model', parts: [{ text: "Entendido. Soy el asistente de Jorge Álvarez. Base de datos reformada activa. ¿Qué pasaje estudiaremos hoy?" }] },
                                 ...currentHistory.map(m => ({
                                     role: m.role === 'assistant' ? 'model' : 'user',
                                     parts: [{ text: m.content }]
                                 }))
-                            ],
-                            safetySettings: [
-                                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
                             ]
                         };
 
@@ -123,7 +117,7 @@
                         if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
                             return data.candidates[0].content.parts[0].text;
                         } else {
-                            lastError = data.error?.message || "Error sin descripción";
+                            lastError = data.error?.message || "Error en respuesta";
                         }
                     } catch (e) {
                         lastError = e.message;
@@ -146,7 +140,7 @@
                     const aiRes = await callGemini(newHistory);
                     setMessages([...newHistory, { role: 'assistant', content: aiRes }]);
                 } catch (err) {
-                    setMessages([...newHistory, { role: 'assistant', content: `❌ FALLO TÉCNICO:\n"${err.message}"\n\nJorge, por favor abre Ajustes ⚙️ y usa el botón de Diagnóstico 🩺. Google dice que no encuentra el motor, pero ese botón nos dirá cuál es el nombre correcto para tu cuenta.` }]);
+                    setMessages([...newHistory, { role: 'assistant', content: `❌ ERROR TÉCNICO:\n"${err.message}"\n\nJorge, tu diagnóstico mostró que tienes motores 2.5 y 2.0. Si esto falla, intenta escribir "Hola" para despertar la conexión.` }]);
                 } finally {
                     setIsLoading(false);
                     setStatus('');
@@ -162,7 +156,7 @@
                                 <Icon name="shield" className="w-6 h-6" />
                             </div>
                             <div>
-                                <h1 className="text-lg font-bold text-white tracking-tight leading-none mb-1">Asistente Predicador <span className="text-lime-500 text-[10px] ml-1 font-mono uppercase border border-lime-500/30 px-1 rounded">v20.0</span></h1>
+                                <h1 className="text-lg font-bold text-white tracking-tight leading-none mb-1">Asistente Predicador <span className="text-lime-500 text-[10px] ml-1 font-mono uppercase border border-lime-500/30 px-1 rounded">v21.0</span></h1>
                                 <p className="text-[10px] text-slate-500 font-bold tracking-[0.2em] uppercase">Soli Deo Gloria • 1689</p>
                             </div>
                         </div>
@@ -186,7 +180,7 @@
                                 <div className="space-y-3">
                                     <h2 className="text-3xl font-bold text-white tracking-[0.4em]">REFORMADOS</h2>
                                     <p className="text-sm max-w-sm mx-auto italic text-slate-400 leading-relaxed font-medium">
-                                        "Toda la Escritura es inspirada por Dios..." <br/> Ingrese el pasaje para el sermón.
+                                        "Tu palabra es una lámpara a mis pies..." <br/> Motor 2.5 listo para el servicio.
                                     </p>
                                 </div>
                             </div>
@@ -194,7 +188,7 @@
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex flex-col message-in ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                                 <div className={`p-7 rounded-[2rem] max-w-[95%] md:max-w-[85%] whitespace-pre-wrap leading-relaxed shadow-2xl text-sm md:text-base border ${
-                                    msg.role === 'user' ? 'bg-blue-600 border-blue-500 text-white rounded-tr-none' : 'bg-[#1a1a20] border-slate-800 text-slate-200 rounded-tl-none'
+                                    msg.role === 'user' ? 'bg-blue-600 border-blue-500 text-white rounded-tr-none' : 'bg-[#1a1a20] border border-slate-800 text-slate-200 rounded-tl-none'
                                 }`}>
                                     {msg.content}
                                 </div>
@@ -212,7 +206,7 @@
                             <div className="flex flex-col gap-4 items-start px-4">
                                 <div className="flex gap-4 items-center text-slate-500 text-sm font-semibold animate-pulse">
                                     <Icon name="loader-2" className="w-6 h-6 animate-spin text-lime-500" />
-                                    Buscando en la fuente de verdad...
+                                    Accediendo a la nueva generación 2.5...
                                 </div>
                                 <div className="text-[10px] text-lime-500/50 font-mono ml-10 tracking-[0.2em] uppercase">{status}</div>
                             </div>
@@ -226,7 +220,7 @@
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                                placeholder="Génesis 3:15..."
+                                placeholder="Escribe el pasaje aquí..."
                                 className="w-full bg-[#0b0b0d] text-white border border-slate-700 rounded-2xl px-7 py-5 outline-none focus:border-lime-500 focus:ring-4 focus:ring-lime-500/5 transition-all resize-none shadow-inner text-sm md:text-base min-h-[64px]"
                                 rows="1"
                             />
@@ -248,14 +242,14 @@
                                     <Icon name="key" className="w-14 h-14 text-lime-400" />
                                 </div>
                                 <div className="space-y-2">
-                                    <h3 className="text-2xl font-bold text-white tracking-tighter uppercase">Configuración de IA</h3>
-                                    <p className="text-xs text-slate-400 px-6">Usa el botón 🩺 si el chat falla para ver qué motores tienes permitidos.</p>
+                                    <h3 className="text-2xl font-bold text-white tracking-tighter uppercase">Nueva Generación</h3>
+                                    <p className="text-xs text-slate-400 px-6">Tu cuenta usa motores 2.5 y 2.0. La v21.0 ya está calibrada para ellos.</p>
                                 </div>
                                 <input 
                                     type="password" 
                                     value={apiKey} 
                                     onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder="Pega tu API KEY aquí..."
+                                    placeholder="API KEY..."
                                     className="w-full bg-[#0b0b0d] border border-slate-700 p-6 rounded-3xl text-white outline-none focus:border-lime-400 text-center font-mono text-xs tracking-widest shadow-2xl"
                                 />
                                 <div className="flex gap-4">
