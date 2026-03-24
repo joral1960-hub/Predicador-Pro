@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente del Predicador - Chat Teológico</title>
-    <!-- Tailwind CSS para el diseño profesional -->
+    <title>Asistente del Predicador - Edición Profesional</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React y Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Iconos Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -26,37 +23,19 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // ==========================================================
-        // 📚 SECCIÓN DE CONOCIMIENTO (AQUÍ CARGAS TU "ORO" TEOLÓGICO)
-        // ==========================================================
+        // =========================================================================
+        // 📚 SECCIÓN PARA JORGE: AQUÍ PEGAS TUS LIBROS
+        // =========================================================================
         const MI_BIBLIOTECA_TEOLOGICA = `
-        DOCUMENTACIÓN MAESTRA CARGADA:
-        
-        1. Confesión de Fe de Londres de 1689 (Bautista Reformada).
-        2. John Gill - "The Cause of God and Truth" (Defensa de la soberanía de Dios).
-        3. Juan Calvino - Institución de la Religión Cristiana.
-        4. Matthew Henry - Comentario completo.
-        5. Charles Spurgeon - Estilo de bosquejos y aplicaciones.
+        BASE DE DATOS PROPIA DE JORGE ÁLVAREZ:
 
-        [COPIA Y PEGA AQUÍ TUS LIBROS O NOTAS ADICIONALES]
+        [BORRA ESTO Y PEGA AQUÍ TUS TEXTOS DE JOHN GILL, SPURGEON, ETC.]
         `;
+        // =========================================================================
 
-        const SYSTEM_PROMPT = `
-        Actúa como un Asistente Teológico Reformado con 30 años de experiencia.
-        
-        USO DE CONOCIMIENTO: Tu base de datos principal es:
-        ${MI_BIBLIOTECA_TEOLOGICA}
-        
-        REGLAS DOCTRINALES:
-        - La Biblia es la autoridad final.
-        - Teología Reformada Histórica (Confesión de 1689).
-        - Estilo pastoral, serio y centrado en la gloria de Dios.
-        
-        PASOS PARA CADA SERMÓN:
-        1. Contexto, 2. Exégesis, 3. Doctrina, 4. Evangelio, 5. Aplicación, 6. Bosquejo.
-        
-        CHAT: Mantén el historial. Si el usuario pide cambios o profundiza, usa el contexto previo.
-        `;
+        const SYSTEM_PROMPT = `Actúa como un Asistente Teológico Reformado con 30 años de experiencia. 
+        FUENTES: ${MI_BIBLIOTECA_TEOLOGICA}. Biblia como autoridad suprema, Confesión de 1689. 
+        Estilo pastoral y Cristocéntrico. Proceso: Contexto, Exégesis, Doctrina, Evangelio, Aplicación, Bosquejo.`;
 
         const Icon = ({ name, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
@@ -75,12 +54,16 @@
                 if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
             }, [messages, isLoading]);
 
-            const copyText = (text) => {
-                navigator.clipboard.writeText(text);
+            const saveKey = (key) => {
+                const cleanKey = key.trim(); // Limpia espacios automáticamente
+                setApiKey(cleanKey);
+                localStorage.setItem('gemini_api_key', cleanKey);
+                setShowSettings(false);
+                alert("Llave configurada correctamente. ¡Ya puedes probar el chat!");
             };
 
             const callGemini = async (currentMessages) => {
-                // Usamos gemini-1.5-flash que es el estándar más estable para llaves gratuitas
+                // Usamos gemini-1.5-flash que es el más compatible
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
                 const contents = currentMessages.map(m => ({
                     role: m.role === 'assistant' ? 'model' : 'user',
@@ -96,33 +79,36 @@
                     })
                 });
 
-                if (!response.ok) throw new Error('Key error');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || 'Error de conexión');
+                }
                 const data = await response.json();
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || "No hay respuesta.";
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Sin respuesta.";
             };
 
             const handleSend = async () => {
                 if (!input.trim() || isLoading) return;
                 if (!apiKey) { setShowSettings(true); return; }
 
-                const newMsgs = [...messages, { role: 'user', content: input }];
-                setMessages(newMsgs);
+                const newMessages = [...messages, { role: 'user', content: input }];
+                setMessages(newMessages);
                 setInput('');
                 setIsLoading(true);
 
                 try {
-                    const aiRes = await callGemini(newMsgs);
-                    setMessages([...newMsgs, { role: 'assistant', content: aiRes }]);
+                    const aiResponse = await callGemini(newMessages);
+                    setMessages([...newMessages, { role: 'assistant', content: aiResponse }]);
                 } catch (err) {
-                    setMessages([...newMsgs, { role: 'assistant', content: "⚠️ Error: Verifica tu API KEY. Haz clic en el icono ⚙️ arriba para configurarla." }]);
+                    setMessages([...newMessages, { role: 'assistant', content: `⚠️ Error Técnico: ${err.message}. Por favor, revisa tu API Key en el icono ⚙️.` }]);
                 } finally {
                     setIsLoading(false);
                 }
             };
 
             return (
-                <div className="flex flex-col h-screen max-w-4xl mx-auto bg-[#0f0f12] border-x border-slate-800 shadow-2xl">
-                    <header className="flex items-center justify-between px-6 py-4 bg-[#1a1a20] border-b border-slate-800">
+                <div className="flex flex-col h-screen max-w-4xl mx-auto bg-[#0f0f12] border-x border-slate-800 shadow-2xl overflow-hidden">
+                    <header className="flex items-center justify-between px-6 py-4 bg-[#1a1a20] border-b border-slate-800 shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-lime-500/10 rounded-lg text-lime-400">
                                 <Icon name="shield" className="w-6 h-6" />
@@ -133,82 +119,62 @@
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400" title="Ajustes"><Icon name="settings" className="w-5 h-5" /></button>
-                            <button onClick={() => { if(confirm("¿Deseas limpiar el estudio actual?")) setMessages([]); }} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400" title="Reiniciar"><Icon name="refresh-cw" className="w-5 h-5" /></button>
+                            <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400"><Icon name="settings" className="w-5 h-5" /></button>
+                            <button onClick={() => setMessages([])} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400"><Icon name="refresh-cw" className="w-5 h-5" /></button>
                         </div>
                     </header>
 
                     <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-40">
-                                <div className="p-6 bg-slate-800/30 rounded-full">
-                                    <Icon name="book-open" className="w-16 h-16 text-lime-500" />
-                                </div>
-                                <h2 className="text-2xl font-bold text-white tracking-widest">SOLI DEO GLORIA</h2>
-                                <p className="text-sm max-w-xs mx-auto italic leading-relaxed">
-                                    Prepara tu sermón con la ayuda de la sana doctrina. Ingresa un pasaje bíblico para comenzar.
-                                </p>
+                                <Icon name="book-open" className="w-16 h-16 text-lime-500" />
+                                <h2 className="text-xl font-bold text-white tracking-widest uppercase text-sm md:text-xl">SOLI DEO GLORIA</h2>
+                                <p className="text-xs max-w-xs mx-auto italic">Ingresa un pasaje bíblico para comenzar.</p>
                             </div>
                         )}
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                <div className={`p-4 rounded-2xl max-w-[90%] md:max-w-[85%] whitespace-pre-wrap leading-relaxed shadow-lg ${
+                                <div className={`p-4 rounded-2xl max-w-[95%] md:max-w-[85%] whitespace-pre-wrap leading-relaxed shadow-lg text-sm md:text-base ${
                                     msg.role === 'user' ? 'bg-blue-700 text-white rounded-tr-none' : 'bg-[#1a1a20] border border-slate-800 text-slate-200 rounded-tl-none'
                                 }`}>
                                     {msg.content}
                                 </div>
-                                {msg.role === 'assistant' && (
-                                    <button onClick={() => copyText(msg.content)} className="mt-2 text-[10px] font-bold text-slate-500 hover:text-lime-500 flex items-center gap-1 ml-2 transition-colors">
-                                        <Icon name="copy" className="w-3 h-3" /> COPIAR CONTENIDO
-                                    </button>
-                                )}
                             </div>
                         ))}
-                        {isLoading && (
-                            <div className="flex gap-3 items-center text-slate-500 text-sm italic animate-pulse">
-                                <Icon name="loader-2" className="w-4 h-4 animate-spin text-lime-500" />
-                                Analizando las Escrituras...
-                            </div>
-                        )}
+                        {isLoading && <div className="text-sm text-slate-500 italic animate-pulse">Escudriñando las Escrituras...</div>}
                     </main>
 
-                    <footer className="p-6 bg-[#1a1a20] border-t border-slate-800">
+                    <footer className="p-4 md:p-6 bg-[#1a1a20] border-t border-slate-800">
                         <div className="flex gap-2 max-w-3xl mx-auto relative">
                             <textarea
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-                                placeholder="Ingresa un pasaje o haz una pregunta..."
+                                placeholder="Escribe aquí..."
                                 className="w-full bg-[#0b0b0d] text-white border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-lime-500 transition-all resize-none shadow-inner"
                                 rows="1"
                             />
-                            <button onClick={handleSend} className="bg-lime-500 hover:bg-lime-400 text-black px-5 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center">
+                            <button onClick={handleSend} className="bg-lime-500 hover:bg-lime-400 text-black px-5 rounded-xl flex items-center justify-center transition-all active:scale-95">
                                 <Icon name="send" className="w-5 h-5" />
                             </button>
                         </div>
                     </footer>
 
-                    {/* Modal de Configuración */}
                     {showSettings && (
-                        <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-md">
-                            <div className="bg-[#1a1a20] p-8 rounded-3xl border border-slate-800 max-w-sm w-full space-y-6 shadow-2xl">
-                                <div className="flex items-center gap-3 text-white">
-                                    <Icon name="key" className="w-6 h-6 text-lime-400" />
-                                    <h3 className="text-xl font-bold">Activa tu Asistente</h3>
-                                </div>
-                                <p className="text-sm text-slate-400 leading-relaxed">
-                                    Introduce tu API Key de Google Gemini. Tus datos se guardan de forma segura en tu navegador y no se comparten.
-                                </p>
+                        <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+                            <div className="bg-[#1a1a20] p-8 rounded-3xl border border-slate-800 max-w-sm w-full space-y-6 shadow-2xl text-center">
+                                <Icon name="key" className="w-10 h-10 text-lime-400 mx-auto" />
+                                <h3 className="text-xl font-bold text-white">Configurar Llave</h3>
                                 <input 
                                     type="password" 
                                     value={apiKey} 
                                     onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder="API Key de Google..."
-                                    className="w-full bg-[#0b0b0d] border border-slate-700 p-4 rounded-xl text-white outline-none focus:border-lime-400 transition-all"
+                                    placeholder="Pega tu clave de Google aquí..."
+                                    className="w-full bg-[#0b0b0d] border border-slate-700 p-4 rounded-xl text-white outline-none focus:border-lime-400 text-center font-mono text-xs"
                                 />
                                 <div className="flex gap-3">
-                                    <button onClick={() => { localStorage.setItem('gemini_api_key', apiKey); setShowSettings(false); }} className="flex-1 bg-lime-500 text-black py-3 rounded-xl font-bold hover:bg-lime-400 transition-all shadow-lg shadow-lime-500/20">Guardar</button>
-                                    <button onClick={() => setShowSettings(false)} className="flex-1 bg-slate-800 text-white py-3 rounded-xl hover:bg-slate-700 transition-all">Cerrar</button>
+                                    <button onClick={() => saveKey(apiKey)} className="flex-1 bg-lime-500 text-black py-3 rounded-xl font-bold hover:bg-lime-400 transition-all shadow-lg shadow-lime-500/20">Guardar</button>
+                                    <button onClick={() => setShowSettings(false)} className="flex-1 bg-slate-800 text-white py-3 rounded-xl">Cerrar</button>
                                 </div>
                             </div>
                         </div>
