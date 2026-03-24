@@ -17,11 +17,12 @@
         import { getFirestore } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         
-        // =========================================================
-        // JORGE: PEGA AQUÍ TUS DATOS DE FIREBASE (Configuración del proyecto)
-        // =========================================================
+        // ========================================================================
+        // JORGE: ESTE ES EL PASO MÁS IMPORTANTE. 
+        // Reemplaza los valores de abajo con los de tu Consola de Firebase -> Configuración del Proyecto.
+        // ========================================================================
         const myFirebaseConfig = {
-          apiKey: "TU_API_KEY_AQUI",
+          apiKey: "TU_API_KEY_REAL_AQUI",
           authDomain: "TU_PROYECTO.firebaseapp.com",
           projectId: "TU_PROYECTO_ID",
           storageBucket: "TU_PROYECTO.appspot.com",
@@ -29,14 +30,23 @@
           appId: "TU_APP_ID"
         };
 
-        // Si estamos en GitHub, usamos tu config. Si estamos en el editor, usa la del entorno.
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'predicador-pro-default';
+        // Verificación de entorno
+        const isLocal = typeof __firebase_config !== 'undefined';
+        const firebaseConfig = isLocal ? JSON.parse(__firebase_config) : myFirebaseConfig;
         
-        const app = initializeApp(firebaseConfig);
-        window.db = getFirestore(app);
-        window.auth = getAuth(app);
-        window.app_id = appId;
+        // El appId de Firestore debe coincidir con el nombre del documento que creaste en la colección 'artifacts'
+        const appId = isLocal ? (typeof __app_id !== 'undefined' ? __app_id : 'predicador-pro-default') : 'predicador-pro-default';
+        
+        try {
+            const app = initializeApp(firebaseConfig);
+            window.db = getFirestore(app);
+            window.auth = getAuth(app);
+            window.app_id = appId;
+            window.firebaseInitSuccess = true;
+        } catch (e) {
+            console.error("Error inicializando Firebase:", e);
+            window.firebaseInitSuccess = false;
+        }
     </script>
 
     <style>
@@ -58,9 +68,6 @@
         .glass-effect { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
 
         .badge-pro { background: linear-gradient(90deg, #84cc16 0%, #bef264 100%); color: #000; font-size: 10px; padding: 2px 10px; border-radius: 99px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
-        .emblem-container { position: relative; display: flex; align-items: center; justify-content: center; }
-        .emblem-ring { position: absolute; border: 1px solid currentColor; border-radius: 50%; opacity: 0.15; animation: rotate-slow 30s linear infinite; }
-        @keyframes rotate-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -99,26 +106,38 @@
 
             const validateLicense = async (code) => {
                 if (!code) return;
+                if (!window.firebaseInitSuccess) {
+                    alert("Error Crítico: No se pudo conectar con Firebase. Asegúrate de haber pegado tus credenciales en el código.");
+                    return;
+                }
+
                 try {
                     const { signInAnonymously } = await import("https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js");
                     const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js");
                     
+                    // PASO 1: Autenticación Anónima (Debe estar activada en la consola de Firebase)
                     await signInAnonymously(window.auth);
                     
+                    // PASO 2: Buscar la licencia
                     const licenseRef = doc(window.db, 'artifacts', window.app_id, 'public', 'data', 'licenses', code.trim().toUpperCase());
                     const licenseSnap = await getDoc(licenseRef);
                     
-                    if (licenseSnap.exists() && licenseSnap.data().active === true) {
-                        setActiveKey(licenseSnap.data().apiKey);
-                        setIsLicenseValid(true);
-                        localStorage.setItem('predicador_license', code.trim().toUpperCase());
-                        setShowSettings(false);
+                    if (licenseSnap.exists()) {
+                        const data = licenseSnap.data();
+                        if (data.active === true) {
+                            setActiveKey(data.apiKey);
+                            setIsLicenseValid(true);
+                            localStorage.setItem('predicador_license', code.trim().toUpperCase());
+                            setShowSettings(false);
+                        } else {
+                            alert("Suscripción Inactiva. Contacte a Jorge Álvarez para renovar.");
+                        }
                     } else {
-                        alert("Licencia no válida o inactiva.");
+                        alert(`Licencia '${code}' no encontrada. Revisa que el código sea correcto.`);
                     }
                 } catch (err) {
-                    alert("Error de servidor. Verifique su configuración de Firebase.");
                     console.error(err);
+                    alert(`Error de servidor: ${err.message}. \n\nPASO REQUERIDO: Ve a tu consola de Firebase -> Authentication -> Sign-in method -> Habilita 'Anónimo'.`);
                 }
             };
 
@@ -141,11 +160,14 @@
                         })
                     });
                     const data = await res.json();
+                    if (data.error) throw new Error(data.error.message);
                     setMessages([...newHistory, { role: 'assistant', content: data.candidates[0].content.parts[0].text }]);
-                } catch (err) { alert("Error en el motor de IA."); } finally { setIsLoading(false); }
+                } catch (err) { 
+                    alert("Error en el motor de IA: " + err.message); 
+                } finally { 
+                    setIsLoading(false); 
+                }
             };
-
-            const isDark = true;
 
             return (
                 <div className="flex flex-col h-screen max-w-5xl mx-auto border-x bg-[#0f0f12] text-slate-200">
