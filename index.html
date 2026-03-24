@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente del Predicador v21.0 - Edición Revelación</title>
+    <title>Asistente del Predicador - Edición Profesional</title>
     <!-- Estilos de Alta Gama -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -57,11 +57,10 @@
                 setApiKey(clean);
                 localStorage.setItem('gemini_api_key', clean);
                 setShowSettings(false);
-                alert("Llave actualizada. ¡Motor 2.5 listo!");
             };
 
             const testModels = async () => {
-                if (!apiKey) return alert("Por favor, pega tu API Key primero.");
+                if (!apiKey) return alert("Pega tu API Key primero.");
                 setStatus("Escaneando motores...");
                 try {
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
@@ -71,57 +70,45 @@
                             .filter(m => m.supportedGenerationMethods.includes("generateContent"))
                             .map(m => m.name.replace("models/", ""))
                             .join("\n• ");
-                        alert("¡CONEXIÓN EXITOSA!\n\nMotores detectados en tu cuenta:\n• " + list);
-                    } else {
-                        alert("Error de Google: " + (data.error?.message || "Llave inválida"));
+                        alert("CONEXIÓN ACTIVA\n\nMotores disponibles:\n• " + list);
                     }
-                } catch (e) {
-                    alert("Fallo de red: " + e.message);
-                } finally { setStatus(""); }
+                } catch (e) { alert("Error: " + e.message); }
+                finally { setStatus(""); }
             };
 
             const callGemini = async (currentHistory) => {
-                // Versión 21.0: Usamos EXACTAMENTE los nombres que tu diagnóstico mostró como disponibles
                 const attempts = [
-                    { v: 'v1beta', m: 'gemini-2.5-flash' }, // Tu primera opción exitosa
-                    { v: 'v1beta', m: 'gemini-2.0-flash' }, // Tu segunda opción exitosa
-                    { v: 'v1beta', m: 'gemini-1.5-flash' },
+                    { v: 'v1beta', m: 'gemini-2.5-flash' }, 
+                    { v: 'v1beta', m: 'gemini-2.0-flash' },
                     { v: 'v1', m: 'gemini-1.5-flash' }
                 ];
 
                 let lastError = "";
-
                 for (const attempt of attempts) {
                     try {
-                        setStatus(`Llamando al motor ${attempt.m}...`);
+                        setStatus(`Consultando motor ${attempt.m}...`);
                         const url = `https://generativelanguage.googleapis.com/${attempt.v}/models/${attempt.m}:generateContent?key=${apiKey}`;
-                        
-                        const body = {
-                            contents: [
-                                { role: 'user', parts: [{ text: `INSTRUCCIONES DE IDENTIDAD: ${SYSTEM_PROMPT}. Confirma disponibilidad.` }] },
-                                { role: 'model', parts: [{ text: "Entendido. Soy el asistente de Jorge Álvarez. Base de datos reformada activa. ¿Qué pasaje estudiaremos hoy?" }] },
-                                ...currentHistory.map(m => ({
-                                    role: m.role === 'assistant' ? 'model' : 'user',
-                                    parts: [{ text: m.content }]
-                                }))
-                            ]
-                        };
-
                         const response = await fetch(url, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(body)
+                            body: JSON.stringify({
+                                contents: [
+                                    { role: 'user', parts: [{ text: `INSTRUCCIONES: ${SYSTEM_PROMPT}. Confirma disponibilidad.` }] },
+                                    { role: 'model', parts: [{ text: "Entendido. Soy el asistente de Jorge Álvarez. Base de datos reformada activa." }] },
+                                    ...currentHistory.map(m => ({
+                                        role: m.role === 'assistant' ? 'model' : 'user',
+                                        parts: [{ text: m.content }]
+                                    }))
+                                ]
+                            })
                         });
-
                         const data = await response.json();
                         if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
                             return data.candidates[0].content.parts[0].text;
                         } else {
-                            lastError = data.error?.message || "Error en respuesta";
+                            lastError = data.error?.message || "Error de respuesta";
                         }
-                    } catch (e) {
-                        lastError = e.message;
-                    }
+                    } catch (e) { lastError = e.message; }
                 }
                 throw new Error(lastError);
             };
@@ -140,7 +127,7 @@
                     const aiRes = await callGemini(newHistory);
                     setMessages([...newHistory, { role: 'assistant', content: aiRes }]);
                 } catch (err) {
-                    setMessages([...newHistory, { role: 'assistant', content: `❌ ERROR TÉCNICO:\n"${err.message}"\n\nJorge, tu diagnóstico mostró que tienes motores 2.5 y 2.0. Si esto falla, intenta escribir "Hola" para despertar la conexión.` }]);
+                    setMessages([...newHistory, { role: 'assistant', content: `❌ Error de Conexión: "${err.message}"` }]);
                 } finally {
                     setIsLoading(false);
                     setStatus('');
@@ -149,14 +136,13 @@
 
             return (
                 <div className="flex flex-col h-screen max-w-5xl mx-auto bg-[#0f0f12] border-x border-slate-800 shadow-2xl relative overflow-hidden">
-                    {/* Header */}
                     <header className="glass-header flex items-center justify-between px-6 py-4 border-b border-slate-800 shrink-0 z-30">
                         <div className="flex items-center gap-4">
                             <div className="p-2.5 bg-lime-500/10 rounded-xl text-lime-400 border border-lime-500/20 shadow-lg glow-lime">
                                 <Icon name="shield" className="w-6 h-6" />
                             </div>
                             <div>
-                                <h1 className="text-lg font-bold text-white tracking-tight leading-none mb-1">Asistente Predicador <span className="text-lime-500 text-[10px] ml-1 font-mono uppercase border border-lime-500/30 px-1 rounded">v21.0</span></h1>
+                                <h1 className="text-lg font-bold text-white tracking-tight leading-none mb-1">Asistente Predicador</h1>
                                 <p className="text-[10px] text-slate-500 font-bold tracking-[0.2em] uppercase">Soli Deo Gloria • 1689</p>
                             </div>
                         </div>
@@ -170,7 +156,6 @@
                         </div>
                     </header>
 
-                    {/* Chat Area */}
                     <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-12 space-y-10 bg-[#0f0f12]">
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center h-full text-center space-y-8 opacity-40">
@@ -180,7 +165,7 @@
                                 <div className="space-y-3">
                                     <h2 className="text-3xl font-bold text-white tracking-[0.4em]">REFORMADOS</h2>
                                     <p className="text-sm max-w-sm mx-auto italic text-slate-400 leading-relaxed font-medium">
-                                        "Tu palabra es una lámpara a mis pies..." <br/> Motor 2.5 listo para el servicio.
+                                        "Lámpara es a mis pies tu palabra..." <br/> Preparado para el estudio bíblico.
                                     </p>
                                 </div>
                             </div>
@@ -206,14 +191,13 @@
                             <div className="flex flex-col gap-4 items-start px-4">
                                 <div className="flex gap-4 items-center text-slate-500 text-sm font-semibold animate-pulse">
                                     <Icon name="loader-2" className="w-6 h-6 animate-spin text-lime-500" />
-                                    Accediendo a la nueva generación 2.5...
+                                    Accediendo a la fuente de la Palabra...
                                 </div>
                                 <div className="text-[10px] text-lime-500/50 font-mono ml-10 tracking-[0.2em] uppercase">{status}</div>
                             </div>
                         )}
                     </main>
 
-                    {/* Input Area */}
                     <footer className="p-8 bg-[#1a1a20] border-t border-slate-800 shrink-0 z-20">
                         <div className="max-w-4xl mx-auto flex gap-4 items-end">
                             <textarea
@@ -234,17 +218,13 @@
                         </div>
                     </footer>
 
-                    {/* Settings Modal */}
                     {showSettings && (
                         <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-xl">
                             <div className="bg-[#1a1a20] p-12 rounded-[3rem] border border-slate-800 max-w-md w-full space-y-10 shadow-2xl text-center">
                                 <div className="p-5 bg-lime-500/10 rounded-full w-fit mx-auto border border-lime-500/20 shadow-inner">
                                     <Icon name="key" className="w-14 h-14 text-lime-400" />
                                 </div>
-                                <div className="space-y-2">
-                                    <h3 className="text-2xl font-bold text-white tracking-tighter uppercase">Nueva Generación</h3>
-                                    <p className="text-xs text-slate-400 px-6">Tu cuenta usa motores 2.5 y 2.0. La v21.0 ya está calibrada para ellos.</p>
-                                </div>
+                                <h3 className="text-2xl font-bold text-white tracking-tighter uppercase">Configuración</h3>
                                 <input 
                                     type="password" 
                                     value={apiKey} 
