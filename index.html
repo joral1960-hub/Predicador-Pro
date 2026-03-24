@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente del Predicador v7.0 - Estable</title>
+    <title>Asistente del Predicador v8.0</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React y Babel -->
@@ -34,13 +34,14 @@
         1. Confesión de Fe de Londres de 1689.
         2. John Gill - "The Cause of God and Truth".
         3. Comentarios de Matthew Henry y Juan Calvino.
+        4. Obras de Charles Spurgeon.
         `;
 
         const SYSTEM_PROMPT = `Actúa como un Asistente Teológico Reformado con 30 años de experiencia. 
         FUENTES: ${MI_BIBLIOTECA_TEOLOGICA}. 
         MARCO: Biblia como autoridad suprema, Confesión de 1689. 
         PROCESO: Contexto, Exégesis, Doctrina, Evangelio, Aplicación, Bosquejo. 
-        IMPORTANTE: Responde siempre en español.`;
+        IMPORTANTE: Responde siempre en español. No ignores ninguna instrucción previa.`;
 
         const Icon = ({ name, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
@@ -64,48 +65,70 @@
                 setApiKey(cleanKey);
                 localStorage.setItem('gemini_api_key', cleanKey);
                 setShowSettings(false);
-                alert("Llave configurada. ¡Ya puedes probar el chat!");
+                alert("Llave configurada. Prueba enviando un pasaje ahora.");
             };
 
             const callGemini = async (currentMessages) => {
-                // CAMBIO CLAVE: Usamos la versión estable 'v1' en lugar de 'v1beta'
-                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                // Probamos con v1beta que permite instrucciones de sistema más claras
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
                 
-                // Mantenemos la inyección directa por ser lo más robusto
-                const contents = [
-                    {
-                        role: 'user',
-                        parts: [{ text: `INSTRUCCIONES MAESTRAS: ${SYSTEM_PROMPT}. Confirma brevemente.` }]
-                    },
-                    {
-                        role: 'model',
-                        parts: [{ text: "Entendido. Soy su Asistente Teológico Reformado. ¿Qué pasaje estudiaremos?" }]
-                    },
-                    ...currentMessages.map(m => ({
-                        role: m.role === 'assistant' ? 'model' : 'user',
-                        parts: [{ text: m.content }]
-                    }))
-                ];
+                const contents = currentMessages.map(m => ({
+                    role: m.role === 'assistant' ? 'model' : 'user',
+                    parts: [{ text: m.content }]
+                }));
+
+                const payload = {
+                    contents: contents,
+                    systemInstruction: {
+                        parts: [{ text: SYSTEM_PROMPT }]
+                    }
+                };
 
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
 
                 if (!response.ok) {
+                    // Si el error es por el campo systemInstruction, usamos el método de inyección
+                    if (data.error?.message?.includes("systemInstruction") || data.error?.message?.includes("system_instruction")) {
+                        return callGeminiFallback(currentMessages);
+                    }
                     throw new Error(data.error?.message || 'Error de conexión');
                 }
 
                 const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
                 
                 if (!text) {
-                    return "⚠️ No se recibió texto de respuesta. Intenta con un pasaje más corto.";
+                    const reason = data.candidates?.[0]?.finishReason;
+                    if (reason === 'SAFETY') return "⚠️ Respuesta bloqueada por filtros de seguridad de Google. Intenta preguntar de forma diferente.";
+                    return "⚠️ Google no devolvió texto. Revisa si tu API Key es válida.";
                 }
 
                 return text;
+            };
+
+            // MÉTODO DE RESPALDO UNIVERSAL
+            const callGeminiFallback = async (currentMessages) => {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                const contents = [
+                    { role: 'user', parts: [{ text: `INSTRUCCIONES: ${SYSTEM_PROMPT}. Confirma.` }] },
+                    { role: 'model', parts: [{ text: "Entendido. Iniciamos el estudio." }] },
+                    ...currentMessages.map(m => ({
+                        role: m.role === 'assistant' ? 'model' : 'user',
+                        parts: [{ text: m.content }]
+                    }))
+                ];
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents })
+                });
+                const data = await response.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Sin respuesta en modo respaldo.";
             };
 
             const handleSend = async () => {
@@ -121,59 +144,53 @@
                     const aiRes = await callGemini(newMsgs);
                     setMessages([...newMsgs, { role: 'assistant', content: aiRes }]);
                 } catch (err) {
-                    setMessages([...newMsgs, { role: 'assistant', content: `❌ ERROR TÉCNICO: ${err.message}. Revisa tu API Key o intenta de nuevo.` }]);
+                    setMessages([...newMsgs, { role: 'assistant', content: `❌ ERROR: ${err.message}. Asegúrate de que la API Key sea correcta en el icono ⚙️.` }]);
                 } finally {
                     setIsLoading(false);
                 }
             };
 
             return (
-                <div className="flex flex-col h-screen max-w-4xl mx-auto bg-[#0f0f12] border-x border-slate-800 shadow-2xl overflow-hidden text-slate-200">
+                <div className="flex flex-col h-screen max-w-4xl mx-auto bg-[#0f0f12] border-x border-slate-800 shadow-2xl overflow-hidden text-slate-200 font-sans">
                     <header className="flex items-center justify-between px-6 py-4 bg-[#1a1a20] border-b border-slate-800 shrink-0 shadow-lg">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-lime-500/10 rounded-lg text-lime-400 border border-lime-500/20">
                                 <Icon name="shield" className="w-6 h-6" />
                             </div>
                             <div>
-                                <h1 className="text-lg font-bold text-white tracking-tight">Asistente Predicador <span className="text-lime-500 text-xs ml-1 font-mono uppercase">v7.0 ESTABLE</span></h1>
+                                <h1 className="text-lg font-bold text-white tracking-tight">Asistente Predicador <span className="text-lime-500 text-xs ml-1 font-mono uppercase">v8.0</span></h1>
                                 <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Tradición Reformada • 1689</p>
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
-                                <Icon name="settings" className="w-5 h-5" />
-                            </button>
-                            <button onClick={() => setMessages([])} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
-                                <Icon name="refresh-cw" className="w-5 h-5" />
-                            </button>
+                            <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"><Icon name="settings" className="w-5 h-5" /></button>
+                            <button onClick={() => setMessages([])} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"><Icon name="refresh-cw" className="w-5 h-5" /></button>
                         </div>
                     </header>
 
-                    <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-[#0f0f12]">
+                    <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-[#0f0f12]">
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center h-full text-center space-y-6 opacity-40">
                                 <Icon name="book-open" className="w-16 h-16 text-lime-500" />
                                 <div className="space-y-2">
-                                    <h2 className="text-xl font-bold text-white tracking-widest uppercase text-sm md:text-xl">SOLI DEO GLORIA</h2>
-                                    <p className="text-sm max-w-xs mx-auto italic text-slate-400 leading-relaxed">
-                                        Versión 7.0 con conexión estable activada. Ingresa un pasaje para comenzar.
-                                    </p>
+                                    <h2 className="text-xl font-bold text-white tracking-widest uppercase">SOLI DEO GLORIA</h2>
+                                    <p className="text-sm max-w-xs mx-auto italic text-slate-400">Versión 8.0 con motor de compatibilidad dual activado.</p>
                                 </div>
                             </div>
                         )}
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                <div className={`p-4 rounded-2xl max-w-[95%] md:max-w-[85%] whitespace-pre-wrap leading-relaxed shadow-lg text-sm md:text-base ${
+                                <div className={`p-5 rounded-2xl max-w-[95%] md:max-w-[85%] whitespace-pre-wrap leading-relaxed shadow-lg text-sm md:text-base ${
                                     msg.role === 'user' ? 'bg-blue-700 text-white rounded-tr-none' : 'bg-[#1a1a20] border border-slate-800 text-slate-200 rounded-tl-none'
                                 }`}>
                                     {msg.content}
                                 </div>
                                 {msg.role === 'assistant' && !msg.content.startsWith('❌') && !msg.content.startsWith('⚠️') && (
                                     <button 
-                                        onClick={() => { navigator.clipboard.writeText(msg.content); alert("¡Copiado al portapapeles!"); }} 
+                                        onClick={() => { navigator.clipboard.writeText(msg.content); alert("¡Copiado!"); }} 
                                         className="mt-2 text-[10px] font-bold text-slate-500 hover:text-lime-500 flex items-center gap-1 ml-2 transition-colors uppercase bg-slate-800/40 px-2 py-1 rounded shadow-sm"
                                     >
-                                        <Icon name="copy" className="w-3 h-3" /> Copiar Bosquejo
+                                        <Icon name="copy" className="w-3 h-3" /> Copiar para Word
                                     </button>
                                 )}
                             </div>
@@ -181,7 +198,7 @@
                         {isLoading && (
                             <div className="flex gap-3 items-center text-slate-500 text-sm italic animate-pulse px-2">
                                 <Icon name="loader-2" className="w-4 h-4 animate-spin text-lime-500" />
-                                Consultando las Escrituras...
+                                Escudriñando las fuentes...
                             </div>
                         )}
                     </main>
@@ -193,10 +210,10 @@
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
                                 placeholder="Escribe el pasaje o una pregunta..."
-                                className="w-full bg-[#0b0b0d] text-white border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-lime-500 transition-all resize-none shadow-inner text-sm md:text-base"
+                                className="w-full bg-[#0b0b0d] text-white border border-slate-700 rounded-xl px-6 py-4 outline-none focus:border-lime-500 transition-all resize-none shadow-inner text-sm md:text-base"
                                 rows="1"
                             />
-                            <button onClick={handleSend} className="bg-lime-500 hover:bg-lime-400 text-black px-5 rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-all">
+                            <button onClick={handleSend} className="bg-lime-500 hover:bg-lime-400 text-black px-6 rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-all">
                                 <Icon name="send" className="w-5 h-5" />
                             </button>
                         </div>
@@ -207,7 +224,7 @@
                             <div className="bg-[#1a1a20] p-8 rounded-3xl border border-slate-800 max-w-sm w-full space-y-6 shadow-2xl text-center">
                                 <Icon name="key" className="w-12 h-12 text-lime-400 mx-auto" />
                                 <h3 className="text-xl font-bold text-white uppercase tracking-tighter">Activar Motor IA</h3>
-                                <p className="text-xs text-slate-400 leading-relaxed">Pega la llave de Google AI Studio aquí abajo y dale a Guardar. Asegúrate de que no haya espacios al inicio.</p>
+                                <p className="text-xs text-slate-400 leading-relaxed">Pega la llave de Google AI Studio aquí abajo y dale a Guardar. Asegúrate de copiarla entera (empieza por AIza...).</p>
                                 <input 
                                     type="password" 
                                     value={apiKey} 
