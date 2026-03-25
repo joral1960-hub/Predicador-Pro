@@ -18,7 +18,7 @@
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         
         // ========================================================================
-        // JORGE: PEGA AQUÍ TUS DATOS (Los que sacaste de la pestaña General)
+        // JORGE: PEGA AQUÍ TUS DATOS REALES DE FIREBASE
         // ========================================================================
         const myFirebaseConfig = {
           apiKey: "AIzaSyBf9xen4C3kO4vh08EJMDnVAym7l-S_jRU", 
@@ -27,12 +27,12 @@
           storageBucket: "predicador-pro.firebasestorage.app",
           messagingSenderId: "145970938733",
           appId: "1:145970938733:web:357aa4d0523d2892891064",
-          measurementId: "G-5B5W93LD31" 
+          measurementId: "G-5B5W93LD31"
         };
 
-        const isCanvas = typeof __firebase_config !== 'undefined';
-        const finalConfig = isCanvas ? JSON.parse(__firebase_config) : myFirebaseConfig;
-        const finalAppId = isCanvas ? (typeof __app_id !== 'undefined' ? __app_id : 'predicador-pro-default') : 'predicador-pro-default';
+        const isLocal = typeof __firebase_config !== 'undefined';
+        const finalConfig = isLocal ? JSON.parse(__firebase_config) : myFirebaseConfig;
+        const finalAppId = isLocal ? (typeof __app_id !== 'undefined' ? __app_id : 'predicador-pro-default') : 'predicador-pro-default';
 
         try {
             const app = initializeApp(finalConfig);
@@ -51,14 +51,75 @@
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Crimson+Pro:wght@400;600&display=swap');
-        body { font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; background-color: #0f0f12; color: #f8fafc; }
-        .theological-paper { font-family: 'Crimson Pro', serif; font-size: 1.25rem; line-height: 1.8; color: #cbd5e1; }
-        .badge-pro { background: linear-gradient(90deg, #84cc16 0%, #bef264 100%); color: #000; font-size: 10px; padding: 2px 12px; border-radius: 99px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
-        .glass-effect { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-        .message-in { animation: slideUp 0.5s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        textarea::placeholder { color: #475569; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
+        
+        :root { --accent: #84cc16; }
+        body { font-family: 'Inter', sans-serif; background-color: #0f0f12; color: #f8fafc; margin: 0; overflow: hidden; }
+        
+        /* ESTILO PAPEL TEOLÓGICO (PERGAMINO) */
+        .theological-paper { 
+            font-family: 'Crimson Pro', serif; 
+            font-size: 1.25rem; 
+            line-height: 1.7; 
+            color: #2d2d2d; 
+            background-color: #fdf6e3; /* Color Hueso/Pergamino */
+            padding: 2.5rem;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 100px rgba(184, 134, 11, 0.1);
+            position: relative;
+            border: 1px solid #e5dcc3;
+        }
+
+        .theological-paper::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .theological-paper h2 { 
+            font-family: 'Playfair Display', serif; 
+            color: #854d0e; 
+            border-bottom: 2px solid rgba(133, 77, 14, 0.2); 
+            margin-top: 2rem; 
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+        
+        .glass-header { backdrop-filter: blur(12px); background: rgba(26, 26, 32, 0.9); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        
+        .message-in { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        /* Estilo para el usuario */
+        .user-bubble {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            border-radius: 2rem 2rem 0.2rem 2rem;
+            padding: 1.25rem 1.75rem;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+            font-style: italic;
+        }
+
+        /* Botón Micrófono Pulsante */
+        .mic-active {
+            animation: pulse-red 1.5s infinite;
+            background-color: #ef4444 !important;
+            color: white !important;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -67,8 +128,10 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        const SYSTEM_PROMPT = `Eres el Asistente Teológico Reformado de Jorge Álvarez (PREDICADOR-PRO). 
-        MARCO: Biblia y Confesión de 1689. Tono académico y pastoral.`;
+        const SYSTEM_PROMPT = `Actúa como un Asistente Teológico Reformado con 30 años de experiencia. 
+        MARCO: Biblia Inerrante y Confesión de Londres de 1689.
+        OBJETIVO: Generar bosquejos expositivos y estudios bíblicos profundos.
+        ESTILO: Académico, pastoral, riguroso.`;
 
         const Icon = ({ name, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
@@ -76,10 +139,12 @@
         };
 
         const FormattedResponse = ({ text }) => (
-            <div className="theological-paper text-left">
-                {text.split('\n').map((line, i) => (
-                    <p key={i} className={line.trim() ? "mb-4" : "h-4"}>{line}</p>
-                ))}
+            <div className="theological-paper">
+                {text.split('\n').map((line, i) => {
+                    if (line.startsWith('##')) return <h2 key={i}>{line.replace(/##/g, '')}</h2>;
+                    if (line.trim().startsWith('-')) return <li key={i} className="ml-6 mb-2">{line.replace('-', '')}</li>;
+                    return <p key={i} className={line.trim() ? "mb-4" : "h-2"}>{line}</p>;
+                })}
             </div>
         );
 
@@ -87,59 +152,63 @@
             const [messages, setMessages] = useState([]);
             const [input, setInput] = useState('');
             const [isLoading, setIsLoading] = useState(false);
-            const [licenseCode, setLicenseCode] = useState(localStorage.getItem('predicador_license') || '');
             const [activeKey, setActiveKey] = useState(null);
             const [isLicenseValid, setIsLicenseValid] = useState(false);
             const [showSettings, setShowSettings] = useState(!localStorage.getItem('predicador_license'));
-            const [authError, setAuthError] = useState(null);
+            const [isListening, setIsListening] = useState(false);
+            const scrollRef = useRef(null);
+
+            useEffect(() => {
+                if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            }, [messages, isLoading]);
+
+            // Función de Micrófono
+            const startSpeech = () => {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    alert("Tu navegador no soporta dictado por voz.");
+                    return;
+                }
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'es-ES';
+                recognition.start();
+                setIsListening(true);
+
+                recognition.onresult = (event) => {
+                    const text = event.results[0][0].transcript;
+                    setInput(text);
+                    setIsListening(false);
+                };
+
+                recognition.onerror = () => setIsListening(false);
+                recognition.onend = () => setIsListening(false);
+            };
 
             const validateLicense = async (code) => {
                 if (!code) return;
-                setAuthError(null);
-                
-                if (!window.PredicadorDB || !window.PredicadorDB.ready) {
-                    setTimeout(() => validateLicense(code), 1000);
-                    return;
-                }
-
                 try {
                     await window.PredicadorDB.signInAnonymously(window.PredicadorDB.auth);
                     const { db, appId, doc, getDoc } = window.PredicadorDB;
-                    
                     const licenseRef = doc(db, 'artifacts', appId, 'public', 'data', 'licenses', code.trim().toUpperCase());
-                    const licenseSnap = await getDoc(licenseRef);
-                    
-                    if (licenseSnap.exists()) {
-                        const data = licenseSnap.data();
-                        if (data.active === true) {
-                            // FLEXIBILIDAD: Acepta tanto 'apiKey' como 'apikey'
-                            const key = data.apiKey || data.apikey;
-                            if (key) {
-                                setActiveKey(key);
-                                setIsLicenseValid(true);
-                                localStorage.setItem('predicador_license', code.trim().toUpperCase());
-                                setShowSettings(false);
-                            } else {
-                                setAuthError("No se encontró la llave API dentro del documento.");
-                            }
-                        } else {
-                            setAuthError("Suscripción encontrada pero está INACTIVA.");
-                        }
-                    } else {
-                        setAuthError(`No encontré el código '${code.toUpperCase()}' en la ruta final.`);
-                    }
-                } catch (err) {
-                    setAuthError(`Error: ${err.message}`);
-                }
+                    const snap = await getDoc(licenseRef);
+                    if (snap.exists() && snap.data().active) {
+                        setActiveKey(snap.data().apiKey || snap.data().apikey);
+                        setIsLicenseValid(true);
+                        localStorage.setItem('predicador_license', code.trim().toUpperCase());
+                        setShowSettings(false);
+                    } else { alert("Código inválido."); }
+                } catch (err) { alert("Error de conexión."); }
             };
 
-            useEffect(() => { if (licenseCode) validateLicense(licenseCode); }, []);
+            useEffect(() => {
+                const stored = localStorage.getItem('predicador_license');
+                if (stored && window.PredicadorDB?.ready) validateLicense(stored);
+            }, [window.PredicadorDB?.ready]);
 
             const handleSend = async () => {
-                if (!input.trim() || isLoading || !isLicenseValid) return;
-                const userMsg = { role: 'user', content: input };
-                const newHistory = [...messages, userMsg];
-                setMessages(newHistory);
+                if (!input.trim() || isLoading) return;
+                const updated = [...messages, { role: 'user', content: input }];
+                setMessages(updated);
                 setInput('');
                 setIsLoading(true);
 
@@ -148,84 +217,103 @@
                     const res = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: SYSTEM_PROMPT + "\n" + input }] }] })
+                        body: JSON.stringify({ 
+                            contents: updated.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
+                            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] }
+                        })
                     });
                     const data = await res.json();
-                    if (data.error) throw new Error(data.error.message);
-                    setMessages([...newHistory, { role: 'assistant', content: data.candidates[0].content.parts[0].text }]);
-                } catch (err) { alert("Error en el motor de IA."); } finally { setIsLoading(false); }
+                    setMessages([...updated, { role: 'assistant', content: data.candidates[0].content.parts[0].text }]);
+                } catch (e) { alert("Error de servidor."); } 
+                finally { setIsLoading(false); }
             };
 
             return (
-                <div className="flex flex-col h-screen max-w-5xl mx-auto border-x border-slate-800 bg-[#0f0f12]">
-                    <header className="flex items-center justify-between px-8 py-6 border-b border-slate-800 bg-[#1a1a20]/80 glass-effect">
-                        <div className="flex items-center gap-5">
-                            <div className="p-3 rounded-2xl bg-lime-500/10 text-lime-400 border border-lime-500/20"><Icon name="shield" className="w-6 h-6" /></div>
-                            <div>
-                                <h1 className="text-xl font-bold text-white leading-none mb-1 text-left">PREDICADOR-PRO</h1>
-                                <p className="text-[10px] font-bold tracking-[0.25em] text-slate-500 text-left uppercase">Soli Deo Gloria</p>
+                <div className="flex flex-col h-screen max-w-5xl mx-auto border-x border-white/5 bg-[#0f0f12]">
+                    <header className="flex items-center justify-between px-8 py-4 glass-header">
+                        <div className="flex items-center gap-4">
+                            <div className="p-2 bg-lime-500/10 rounded-xl border border-lime-500/20">
+                                <Icon name="shield" className="w-6 h-6 text-lime-400" />
+                            </div>
+                            <div className="text-left">
+                                <h1 className="text-lg font-bold text-white tracking-tight">PREDICADOR-PRO</h1>
+                                <p className="text-[9px] font-black tracking-[0.3em] text-slate-500 uppercase leading-none">Soli Deo Gloria</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
-                            <span className="badge-pro">{isLicenseValid ? 'PRO' : 'LOCK'}</span>
-                            {isLicenseValid && (
-                                <button onClick={() => { localStorage.removeItem('predicador_license'); window.location.reload(); }} className="text-slate-500 hover:text-red-400"><Icon name="log-out" className="w-5 h-5" /></button>
-                            )}
+                            <div className="flex items-center gap-1.5 bg-lime-500/10 border border-lime-500/30 px-3 py-1 rounded-full">
+                                <div className="w-1.5 h-1.5 bg-lime-500 rounded-full animate-pulse"></div>
+                                <span className="text-[10px] font-black text-lime-400 tracking-tighter">SUSCRIPCIÓN PRO</span>
+                            </div>
+                            <button onClick={() => { localStorage.removeItem('predicador_license'); window.location.reload(); }} className="text-slate-500 hover:text-red-400 transition-colors">
+                                <Icon name="log-out" className="w-5 h-5" />
+                            </button>
                         </div>
                     </header>
 
-                    <main className="flex-1 overflow-y-auto p-8 md:p-12 space-y-12">
+                    <main ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-12 space-y-12">
                         {messages.length === 0 && (
-                            <div className="flex flex-col items-center justify-center h-full text-center opacity-20 message-in">
-                                <Icon name="book-marked" className="w-32 h-32 mb-8 text-lime-500" />
-                                <h2 className="text-5xl font-extrabold italic text-white tracking-tighter">Estudio Teológico</h2>
-                                <p className="mt-4 text-slate-400 italic">"Escudriñad las Escrituras..."</p>
+                            <div className="flex flex-col items-center justify-center h-full text-center opacity-20 space-y-6">
+                                <Icon name="book-open" className="w-24 h-24 text-lime-500" />
+                                <h2 className="text-4xl font-black italic text-white tracking-tighter">Estudio Teológico</h2>
+                                <p className="text-slate-400">Comienza tu análisis exegético aquí</p>
                             </div>
                         )}
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex flex-col message-in ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                <div className={`p-6 md:p-8 rounded-[2rem] max-w-[95%] md:max-w-[85%] border shadow-xl ${msg.role === 'user' ? 'bg-blue-600 border-blue-500 text-white rounded-tr-none' : 'bg-[#1a1a20] border-slate-800 rounded-tl-none'}`}>
-                                    {msg.role === 'user' ? <p className="italic text-right">{msg.content}</p> : <FormattedResponse text={msg.content} />}
-                                </div>
+                                {msg.role === 'user' ? (
+                                    <div className="user-bubble max-w-[85%] text-lg">
+                                        {msg.content}
+                                    </div>
+                                ) : (
+                                    <div className="max-w-[95%]">
+                                        <FormattedResponse text={msg.content} />
+                                    </div>
+                                )}
                             </div>
                         ))}
                         {isLoading && (
-                            <div className="flex items-center gap-3 text-lime-500 animate-pulse font-bold text-xs uppercase tracking-widest ml-4">
+                            <div className="flex items-center gap-3 text-lime-500 animate-pulse ml-4 font-bold text-xs uppercase tracking-widest">
                                 <Icon name="loader-2" className="w-5 h-5 animate-spin" />
-                                <span>Analizando bajo la sana doctrina...</span>
+                                <span>Consultando el Canon Bíblico...</span>
                             </div>
                         )}
                     </main>
 
-                    <footer className="p-6 md:p-8 border-t border-slate-800 bg-[#1a1a20]">
-                        <div className="flex gap-4">
-                            <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Pasaje o tema..." disabled={!isLicenseValid} className="w-full bg-[#0f0f12] text-white border border-slate-700 rounded-2xl px-6 py-4 outline-none focus:ring-1 focus:ring-lime-500 transition-all resize-none shadow-inner" rows="1" />
-                            <button onClick={handleSend} disabled={!input.trim() || isLoading} className="p-7 rounded-[2rem] bg-lime-500 text-black shadow-lg shadow-lime-500/20 active:scale-95 transition-all"><Icon name="send" className="w-7 h-7" /></button>
+                    <footer className="p-6 md:p-8 bg-[#1a1a20] border-t border-white/5">
+                        <div className="flex gap-4 max-w-4xl mx-auto items-center">
+                            <button 
+                                onClick={startSpeech}
+                                className={`p-5 rounded-2xl transition-all ${isListening ? 'mic-active' : 'bg-slate-800 text-slate-400 hover:text-white'}`}
+                            >
+                                <Icon name={isListening ? "mic" : "mic-off"} className="w-6 h-6" />
+                            </button>
+                            <textarea 
+                                value={input} 
+                                onChange={(e) => setInput(e.target.value)} 
+                                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                                placeholder="Escribe o dicta un pasaje..." 
+                                className="w-full bg-[#0f0f12] text-white border border-slate-700 rounded-2xl px-6 py-4 outline-none focus:ring-1 focus:ring-lime-500 transition-all resize-none shadow-inner" 
+                                rows="1" 
+                            />
+                            <button onClick={handleSend} disabled={!input.trim() || isLoading} className="p-6 rounded-2xl bg-lime-500 text-black shadow-lg shadow-lime-500/20 active:scale-95 transition-all hover:bg-lime-400">
+                                <Icon name="send" className="w-6 h-6" />
+                            </button>
                         </div>
                     </footer>
 
                     {showSettings && (
-                        <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50">
-                            <div className="p-8 md:p-16 rounded-[3rem] border border-slate-800 bg-[#1a1a20] text-center space-y-8 max-w-2xl w-full shadow-2xl overflow-y-auto max-h-[95vh]">
+                        <div className="fixed inset-0 bg-black/98 flex items-center justify-center p-4 z-50 backdrop-blur-xl">
+                            <div className="p-12 md:p-16 rounded-[4rem] border border-white/10 bg-[#1a1a20] text-center space-y-10 max-w-md w-full shadow-2xl">
                                 <Icon name="shield-check" className="w-20 h-20 mx-auto text-lime-500" />
-                                <h3 className="text-3xl font-black uppercase text-white tracking-tighter leading-none">Mi Suscripción</h3>
-                                
-                                {authError && (
-                                    <div className="bg-red-500/10 border border-red-500/30 p-6 rounded-3xl text-left space-y-4">
-                                        <p className="text-red-400 font-bold flex items-center gap-2 text-lg leading-tight">
-                                            <Icon name="alert-circle" className="w-6 h-6" />
-                                            ¡Casi lo logras!
-                                        </p>
-                                        <div className="text-sm text-slate-300 space-y-3 border-t border-red-500/20 pt-4">
-                                            <p className="font-bold">El sistema no encuentra tu llave:</p>
-                                            <p>{authError}</p>
-                                            <p className="text-xs italic text-slate-500">Asegúrate de haber guardado los cambios en Firebase y de haber puesto tus datos reales en el código de GitHub.</p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <input type="text" value={licenseCode} onChange={(e) => setLicenseCode(e.target.value)} placeholder="CÓDIGO DE ACCESO..." className="w-full border p-6 rounded-[2rem] text-center bg-[#0b0b0d] border-slate-700 text-white font-mono tracking-widest outline-none focus:border-lime-500" />
-                                <button onClick={() => validateLicense(licenseCode)} className="w-full bg-lime-500 text-black py-6 rounded-[2.5rem] font-bold uppercase tracking-widest shadow-xl shadow-lime-500/20 hover:bg-lime-400 transition-colors">Activar Acceso</button>
+                                <h3 className="text-3xl font-black uppercase text-white tracking-tighter">Mi Suscripción</h3>
+                                <input 
+                                    type="text" 
+                                    placeholder="CÓDIGO DE ACCESO..." 
+                                    className="w-full border p-6 rounded-[2rem] text-center bg-[#0b0b0d] border-slate-700 text-white font-mono tracking-widest outline-none focus:border-lime-500" 
+                                    onKeyDown={(e) => { if (e.key === 'Enter') validateLicense(e.target.value); }}
+                                />
+                                <p className="text-slate-500 text-[10px] uppercase tracking-widest">Ingrese su código para activar el motor teológico</p>
                             </div>
                         </div>
                     )}
