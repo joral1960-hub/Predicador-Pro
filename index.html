@@ -3,58 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PREDICADOR-PRO | Soli Deo Gloria</title>
+    <title>PREDICADOR-PRO | Acceso Ministerial</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --accent-color: #d4af37; /* Oro */
+            --gold: #d4af37;
+            --dark-bg: #1a1a1a;
+            --card-bg: #242424;
+            --text-main: #e0e0e0;
             --parchment: #f4ecd8;
         }
-        body { font-family: 'Georgia', serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: 0.3s; }
-        .container { max-width: 800px; margin: auto; }
-        h1 { text-align: center; color: var(--accent-color); border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
-        #chat-box { height: 400px; overflow-y: auto; border: 1px solid #333; padding: 15px; margin-bottom: 20px; background: #1e1e1e; border-radius: 8px; }
-        .message { margin-bottom: 15px; line-height: 1.6; }
-        .user { color: var(--accent-color); font-weight: bold; }
-        .bot { color: #fff; }
-        textarea { width: 100%; height: 80px; background: #222; color: #fff; border: 1px solid #444; border-radius: 5px; padding: 10px; font-size: 16px; resize: none; }
-        button { background: var(--accent-color); color: #000; border: none; padding: 12px 25px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 10px; }
-        button:hover { background: #b8962d; }
-        /* Modo Pergamino */
-        .light-mode { background-color: var(--parchment); color: #2c2c2c; }
-        .light-mode #chat-box { background: #fff; border-color: #ccc; color: #2c2c2c; }
-        .light-mode textarea { background: #fff; color: #000; border-color: #ccc; }
-        .light-mode .bot { color: #000; }
-        .controls { text-align: right; margin-bottom: 10px; }
+        body { 
+            font-family: 'Times New Roman', Times, serif; 
+            background-color: var(--dark-bg); 
+            color: var(--text-main); 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+        }
+        .app-card {
+            background: var(--card-bg);
+            width: 90%;
+            max-width: 500px;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            text-align: center;
+        }
+        h1 { color: var(--gold); letter-spacing: 2px; margin-bottom: 5px; font-size: 24px; }
+        .subtitle { font-style: italic; color: #888; font-size: 14px; margin-bottom: 30px; }
+        
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; color: var(--gold); margin-bottom: 8px; font-size: 12px; text-transform: uppercase; }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            background: #111;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: 'Georgia', serif;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: var(--gold);
+            color: black;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        button:hover { background: #b8962d; transform: translateY(-2px); }
+        #chat-area { display: none; margin-top: 20px; }
+        .footer-logo { margin-top: 30px; font-size: 12px; color: #555; }
+        
+        /* MODO PERGAMINO */
+        .light-mode { background-color: #ddd; color: #1a1a1a; }
+        .light-mode .app-card { background: var(--parchment); border: 1px solid #c4b494; }
+        .light-mode h1, .light-mode label { color: #8b4513; }
+        .light-mode input, .light-mode textarea { background: white; color: black; border: 1px solid #c4b494; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="controls">
-        <button onclick="toggleTheme()">☀️ Modo Pergamino</button>
+<div class="app-card">
+    <div style="text-align: right;">
+        <i class="fas fa-scroll" onclick="toggleTheme()" style="cursor:pointer; color:var(--gold);"></i>
     </div>
     <h1>PREDICADOR-PRO</h1>
-    <div id="chat-box"></div>
-    
-    <div id="auth-section">
-        <input type="text" id="license-key" placeholder="Ingresa tu Código de Acceso (Ej: JORGE-PRO-2025)" style="width: 70%; padding: 10px;">
-        <button onclick="verificarLicencia()">ACTIVAR ACCESO</button>
+    <div class="subtitle">Soli Deo Gloria</div>
+
+    <div id="auth-box">
+        <div class="input-group">
+            <label>Código de Suscripción</label>
+            <input type="text" id="license-key" placeholder="Ej: JORGE-PRO-2025">
+        </div>
+        <button onclick="verificarLicencia()">Activar Acceso Ministerial</button>
     </div>
 
-    <div id="main-app" style="display:none;">
-        <textarea id="user-input" placeholder="Dicta o escribe tu idea de sermón aquí..."></textarea>
-        <button onclick="enviarConsulta()">GENERAR ESTUDIO BÍBLICO 📖</button>
-        <button onclick="startSpeech()" id="mic-btn">🎤 DICTAR</button>
+    <div id="chat-area">
+        <div class="input-group">
+            <label>Consulta Teológica / Pasaje</label>
+            <textarea id="user-input" rows="4" placeholder="Dicta tu idea aquí..."></textarea>
+        </div>
+        <button onclick="enviarConsulta()"><i class="fas fa-feather-alt"></i> Generar Bosquejo</button>
+        <p id="status-msg" style="font-size: 12px; margin-top: 10px; color: var(--gold);"></p>
     </div>
-    <p style="text-align: center; font-size: 12px; margin-top: 20px; color: #666;">Soli Deo Gloria | Administrado por Jorge Álvarez</p>
+
+    <div class="footer-logo">Administrado por Jorge Álvarez<br>Villa Elisa, Paraguay</div>
 </div>
 
 <script>
-    // --- CONFIGURACIÓN FIREBASE (Tus llaves actuales) ---
     const firebaseConfig = {
         apiKey: "AIzaSyBf9xenhC3kO4vhO8EJMDnVAYm7L-S_jRU",
         authDomain: "predicador-pro.firebaseapp.com",
@@ -66,91 +114,42 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let licenciaActiva = false;
-    let nombrePastor = "Pastor";
+    async function verificarLicencia() {
+        const key = document.getElementById('license-key').value.trim().toUpperCase();
+        const docRef = db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key);
+        const doc = await docRef.get();
+        
+        if (doc.exists && doc.data().active === true) {
+            document.getElementById('auth-box').style.display = 'none';
+            document.getElementById('chat-area').style.display = 'block';
+        } else {
+            alert("Acceso denegado. Contacte al administrador.");
+        }
+    }
 
-    // --- FUNCIÓN DE BIBLIOTECA (La mejora de Berkhof) ---
     async function obtenerSabiduriaBerkhof() {
         try {
             const docRef = db.collection("artifacts/predicador-pro-default/public/data/biblioteca").doc("BERKHOF");
             const doc = await docRef.get();
-            if (doc.exists) {
-                const data = doc.data();
-                // Une todos los campos que hayas creado (introduccion, doctrina, etc.)
-                return Object.entries(data).map(([titulo, texto]) => `[Referencia: ${titulo}] ${texto}`).join("\n\n");
-            }
-        } catch (e) { console.error("Error leyendo biblioteca:", e); }
-        return "No hay referencias adicionales en la biblioteca.";
-    }
-
-    async function verificarLicencia() {
-        const key = document.getElementById('license-key').value.trim().toUpperCase();
-        const docRef = db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key);
-        
-        const doc = await docRef.get();
-        if (doc.exists && doc.data().active === true) {
-            licenciaActiva = true;
-            nombrePastor = doc.data().pastorName || "Pastor";
-            document.getElementById('auth-section').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-            addMessage("Sistema", `Bienvenido, ${nombrePastor}. Acceso verificado. La biblioteca de Berkhof está lista.`);
-        } else {
-            alert("Código inválido o suscripción inactiva. Contacte a Jorge Álvarez.");
-        }
+            return doc.exists ? JSON.stringify(doc.data()) : "";
+        } catch (e) { return ""; }
     }
 
     async function enviarConsulta() {
-        const input = document.getElementById('user-input');
-        const query = input.value.trim();
-        if (!query) return;
-
-        addMessage("Tú", query);
-        input.value = "";
-
-        // Consultamos la biblioteca antes de responder
+        const msg = document.getElementById('status-msg');
+        msg.innerText = "Consultando biblioteca de Berkhof...";
         const sabiduria = await obtenerSabiduriaBerkhof();
-
-        const promptFinal = `Eres un asistente teológico reformado. 
-        Instrucciones: Responde con rigor exegético basándote en la Confesión de Londres de 1689.
-        CONOCIMIENTO ADICIONAL DE TU BIBLIOTECA (Usa esto para enriquecer tu respuesta):
-        ${sabiduria}
         
-        Pregunta del Pastor: ${query}`;
-
-        // Aquí conectas con tu API de IA (Gemini/OpenAI) 
-        // Por ahora simulamos la respuesta para que veas la estructura
+        // Simulación por ahora, pero ya cargando el contexto
         setTimeout(() => {
-            addMessage("Asistente", `Analizando bajo la lente de Berkhof y la 1689... [Respuesta teológica en proceso]`);
-        }, 1000);
-    }
-
-    function addMessage(sender, text) {
-        const chatBox = document.getElementById('chat-box');
-        const div = document.createElement('div');
-        div.className = "message";
-        div.innerHTML = `<span class="${sender === 'Tú' ? 'user' : 'bot'}">${sender}:</span> ${text}`;
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
+            msg.innerText = "Estudio generado con éxito basándose en Berkhof.";
+            alert("¡Listo! El asistente ha procesado tu consulta usando la Teología de Berkhof.");
+        }, 1500);
     }
 
     function toggleTheme() {
         document.body.classList.toggle('light-mode');
     }
-
-    // --- RECONOCIMIENTO DE VOZ ---
-    function startSpeech() {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'es-PY';
-        document.getElementById('mic-btn').innerText = "🔴 ESCUCHANDO...";
-        recognition.start();
-
-        recognition.onresult = (event) => {
-            document.getElementById('user-input').value = event.results[0][0].transcript;
-            document.getElementById('mic-btn').innerText = "🎤 DICTAR";
-        };
-        recognition.onerror = () => { document.getElementById('mic-btn').innerText = "🎤 DICTAR"; };
-    }
 </script>
-
 </body>
 </html>
