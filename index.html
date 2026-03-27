@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PREDICADOR-PRO | Homilética Avanzada</title>
+    <title>PREDICADOR-PRO | Homilética Profesional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -16,224 +16,155 @@
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         
         const myFirebaseConfig = {
-          apiKey: "AIzaSyBf9xen4C3kO4vh08EJMDnVAym7l-S_jRU", 
+          apiKey: "AIzaSyC3tAC8y7E1SfnTWi08fwq7gMXP_mnmpfw", 
           authDomain: "predicador-pro.firebaseapp.com",
           projectId: "predicador-pro",
           storageBucket: "predicador-pro.firebasestorage.app",
           messagingSenderId: "145970938733",
-          appId: "1:145970938733:web:357aa4d0523d2892891064",
-          measurementId: "G-5B5W93LD31" 
+          appId: "1:145970938733:web:357aa4d0523d2892891064"
         };
 
-        try {
-            const app = initializeApp(myFirebaseConfig);
-            window.PredicadorDB = {
-                db: getFirestore(app),
-                auth: getAuth(app),
-                doc: doc,
-                getDoc: getDoc,
-                signInAnonymously: signInAnonymously,
-                appId: 'predicador-pro-default', // ID de tu proyecto en Canvas/Firebase
-                ready: true
-            };
-        } catch (e) {
-            console.error("Error Firebase:", e);
-        }
+        const app = initializeApp(myFirebaseConfig);
+        window.PredicadorDB = {
+            db: getFirestore(app),
+            auth: getAuth(app),
+            doc, getDoc, signInAnonymously,
+            appId: 'predicador-pro-default',
+            ready: true
+        };
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Crimson+Pro:wght@400;600&display=swap');
-        body { font-family: 'Inter', sans-serif; margin: 0; background-color: #0f0f12; color: #f8fafc; }
-        .theological-paper { font-family: 'Crimson Pro', serif; font-size: 1.25rem; line-height: 1.8; color: #cbd5e1; }
-        .glass-effect { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-        .message-in { animation: slideUp 0.4s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Crimson+Pro:wght@400;600&display=swap');
+        body { font-family: 'Inter', sans-serif; transition: 0.3s; }
+        .dark { background-color: #0f0f12; color: #f8fafc; }
+        .light { background-color: #f1f5f9; color: #1e293b; }
+        .theological-paper { font-family: 'Crimson Pro', serif; font-size: 1.2rem; line-height: 1.7; }
+        .glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .dark .card { background-color: #1a1a20; border-color: #334155; }
+        .light .card { background-color: #ffffff; border-color: #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
     </style>
 </head>
-<body>
+<body id="app-body" class="dark">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect } = React;
 
-        // --- PROMPT MAESTRO ---
-        const SYSTEM_PROMPT = `Eres PREDICADOR-PRO, el asistente de homilética de Jorge Álvarez. 
-        TU MISIÓN: Generar bosquejos exegéticos, análisis de griego/hebreo y aplicaciones pastorales.
-        MARCO DOCTRINAL: Biblia Reina Valera 1960 y la Confesión de Fe de Londres de 1689.
-        TONO: Solemne, académico y profundamente bíblico.`;
-
-        const FormattedResponse = ({ text }) => (
-            <div className="theological-paper text-left">
-                {text.split('\n').map((line, i) => (
-                    <p key={i} className={line.trim() ? "mb-4" : "h-4"}>{line}</p>
-                ))}
-            </div>
-        );
+        const SYSTEM_PROMPT = "Eres PREDICADOR-PRO, un erudito teológico reformado. Responde con profundidad exegética basada en la Confesión de 1689.";
 
         const App = () => {
-            const [messages, setMessages] = useState([]);
-            const [input, setInput] = useState('');
-            const [isLoading, setIsLoading] = useState(false);
             const [isLicenseValid, setIsLicenseValid] = useState(false);
             const [licenseCode, setLicenseCode] = useState(localStorage.getItem('predicador_license') || '');
             const [activeKey, setActiveKey] = useState(null);
-            const [authError, setAuthError] = useState(null);
-            const [isListening, setIsListening] = useState(false);
+            const [messages, setMessages] = useState([]);
+            const [input, setInput] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const [theme, setTheme] = useState('dark');
 
-            // Validar Licencia en Firebase
+            const toggleTheme = () => {
+                const newTheme = theme === 'dark' ? 'light' : 'dark';
+                setTheme(newTheme);
+                document.getElementById('app-body').className = newTheme;
+            };
+
             const validateLicense = async (code) => {
                 if (!code) return;
-                setAuthError(null);
-                
                 try {
-                    if (!window.PredicadorDB?.ready) throw new Error("Conectando con el servidor...");
-                    
                     await window.PredicadorDB.signInAnonymously(window.PredicadorDB.auth);
                     const { db, appId, doc, getDoc } = window.PredicadorDB;
-                    
-                    const licenseRef = doc(db, 'artifacts', appId, 'public', 'data', 'licenses', code.trim().toUpperCase());
-                    const snap = await getDoc(licenseRef);
-                    
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'licenses', code.trim().toUpperCase());
+                    const snap = await getDoc(docRef);
                     if (snap.exists() && snap.data().active) {
-                        setActiveKey(snap.data().apiKey || snap.data().apikey);
+                        const key = snap.data().apiKey || snap.data().apikey;
+                        setActiveKey(key);
                         setIsLicenseValid(true);
                         localStorage.setItem('predicador_license', code.toUpperCase());
-                    } else {
-                        setAuthError("Código inválido o suscripción vencida.");
-                    }
-                } catch (err) { setAuthError(err.message); }
+                    } else { alert("Licencia Inválida"); localStorage.removeItem('predicador_license'); }
+                } catch (e) { console.error(e); }
             };
 
             useEffect(() => { if (licenseCode) validateLicense(licenseCode); }, []);
 
-            // Función para obtener Berkhof de Firebase
-            async function consultarBerkhof() {
-                try {
-                    const { db, appId, doc, getDoc } = window.PredicadorDB;
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'biblioteca', 'BERKHOF');
-                    const snap = await getDoc(docRef);
-                    return snap.exists() ? JSON.stringify(snap.data()) : "";
-                } catch (e) { return ""; }
-            }
-
-            // Dictado por Voz
-            const startSpeech = () => {
-                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.lang = 'es-PY';
-                recognition.onstart = () => setIsListening(true);
-                recognition.onresult = (e) => {
-                    setInput(e.results[0][0].transcript);
-                    setIsListening(false);
-                };
-                recognition.onerror = () => setIsListening(false);
-                recognition.start();
-            };
-
             const handleSend = async () => {
-                if (!input.trim() || isLoading) return;
-                
-                const userMsg = { role: 'user', content: input };
-                setMessages(prev => [...prev, userMsg]);
+                if (!input.trim() || !activeKey) return;
+                const newMsg = { role: 'user', content: input };
+                setMessages([...messages, newMsg]);
                 setInput('');
                 setIsLoading(true);
 
                 try {
-                    const extraData = await consultarBerkhof();
-                    const promptFinal = `${SYSTEM_PROMPT} \n REFERENCIA BIBLIOTECA: ${extraData} \n CONSULTA: ${input}`;
-
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: promptFinal }] }] })
+                        body: JSON.stringify({ contents: [{ parts: [{ text: SYSTEM_PROMPT + "\n\nConsulta: " + input }] }] })
                     });
-                    
                     const data = await res.json();
-                    const botText = data.candidates[0].content.parts[0].text;
-                    setMessages(prev => [...prev, { role: 'assistant', content: botText }]);
+                    const responseText = data.candidates[0].content.parts[0].text;
+                    setMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
                 } catch (err) {
-                    setMessages(prev => [...prev, { role: 'assistant', content: "Error al conectar con el motor de sabiduría." }]);
+                    setMessages(prev => [...prev, { role: 'assistant', content: "Error de conexión. Verifique su llave API en Firebase." }]);
                 } finally { setIsLoading(false); }
             };
 
             if (!isLicenseValid) {
                 return (
-                    <div className="flex items-center justify-center h-screen bg-[#0a0a0c] p-6">
-                        <div className="max-w-md w-full bg-[#16161a] p-10 rounded-[2.5rem] border border-slate-800 text-center shadow-2xl">
-                            <i className="fas fa-shield-halved text-5xl text-lime-500 mb-6"></i>
-                            <h2 className="text-2xl font-bold text-white mb-2 uppercase tracking-tighter">Acceso Restringido</h2>
-                            <p className="text-slate-500 text-sm mb-8 italic">Soli Deo Gloria | Predicador-Pro</p>
-                            <input 
-                                type="text" 
-                                value={licenseCode} 
-                                onChange={(e) => setLicenseCode(e.target.value)}
-                                placeholder="INGRESE SU CÓDIGO" 
-                                className="w-full bg-black border border-slate-700 rounded-2xl p-5 text-center text-white tracking-[0.3em] mb-4 focus:border-lime-500 outline-none transition-all"
-                            />
-                            <button onClick={() => validateLicense(licenseCode)} className="w-full bg-lime-500 text-black font-bold py-5 rounded-2xl hover:bg-lime-400 transition-all uppercase tracking-widest">Activar</button>
-                            {authError && <p className="text-red-500 text-xs mt-4">{authError}</p>}
+                    <div className="flex items-center justify-center h-screen p-6">
+                        <div className="card max-w-md w-full p-10 rounded-[2rem] border text-center shadow-2xl bg-[#16161a]">
+                            <i className="fas fa-lock text-4xl text-lime-500 mb-6"></i>
+                            <h2 className="text-xl font-bold mb-6 uppercase tracking-widest text-white">Acceso Ministerial</h2>
+                            <input type="text" value={licenseCode} onChange={(e) => setLicenseCode(e.target.value)} placeholder="CÓDIGO" className="w-full bg-black border border-slate-700 rounded-xl p-4 text-center text-white mb-4 outline-none focus:border-lime-500" />
+                            <button onClick={() => validateLicense(licenseCode)} className="w-full bg-lime-500 text-black font-bold py-4 rounded-xl hover:bg-lime-400 uppercase">Activar</button>
                         </div>
                     </div>
                 );
             }
 
             return (
-                <div className="flex flex-col h-screen max-w-4xl mx-auto bg-[#0f0f12] border-x border-slate-900 shadow-2xl">
-                    <header className="flex items-center justify-between px-8 py-6 border-b border-slate-900 bg-[#16161a]/50 glass-effect">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-lime-500/10 rounded-xl flex items-center justify-center border border-lime-500/20">
-                                <i className="fas fa-shield-check text-lime-500 text-xl"></i>
-                            </div>
+                <div className="flex flex-col h-screen max-w-4xl mx-auto border-x border-slate-800">
+                    <header className="flex items-center justify-between px-8 py-5 border-b border-slate-800 glass sticky top-0 z-10">
+                        <div className="flex items-center gap-3">
+                            <i className="fas fa-shield-halved text-lime-500 text-xl"></i>
                             <div>
-                                <h1 className="text-lg font-bold text-white leading-none">PREDICADOR-PRO</h1>
-                                <p className="text-[9px] font-bold text-slate-500 tracking-[0.3em] uppercase">Soli Deo Gloria</p>
+                                <h1 className="text-lg font-bold leading-none">PREDICADOR-PRO</h1>
+                                <p className="text-[9px] tracking-[0.2em] text-slate-500 font-bold uppercase">Soli Deo Gloria</p>
                             </div>
                         </div>
-                        <div className="bg-lime-500 text-black text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-tighter">MODO PRO</div>
+                        <div className="flex items-center gap-4">
+                            <button onClick={toggleTheme} className="text-slate-400 hover:text-lime-500 text-xl transition-colors">
+                                <i className={`fas ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`}></i>
+                            </button>
+                            <div className="bg-lime-500 text-black text-[10px] font-black px-3 py-1 rounded-full">MODO PRO</div>
+                        </div>
                     </header>
 
-                    <main className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar">
+                    <main className="flex-1 overflow-y-auto p-6 md:p-10 space-y-8">
                         {messages.length === 0 && (
                             <div className="h-full flex flex-col items-center justify-center opacity-10 text-center">
-                                <i className="fas fa-book-open-reader text-8xl text-lime-500 mb-6"></i>
-                                <h2 className="text-4xl font-black italic text-white">Estudio Teológico</h2>
-                                <p className="text-slate-400 italic">"Escudriñad las Escrituras..."</p>
+                                <i className="fas fa-book-open text-7xl mb-4"></i>
+                                <h2 className="text-3xl font-bold italic">Laboratorio Homilético</h2>
                             </div>
                         )}
                         {messages.map((msg, i) => (
-                            <div key={i} className={`flex flex-col message-in ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                <div className={`p-6 md:p-8 rounded-[2rem] max-w-[90%] border shadow-lg ${msg.role === 'user' ? 'bg-lime-500 text-black font-semibold rounded-tr-none border-lime-400' : 'bg-[#1a1a20] text-slate-200 rounded-tl-none border-slate-800'}`}>
-                                    {msg.role === 'user' ? <p>{msg.content}</p> : <FormattedResponse text={msg.content} />}
+                            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`p-6 rounded-[1.5rem] max-w-[90%] border ${msg.role === 'user' ? 'bg-lime-500 text-black border-lime-400' : 'card'}`}>
+                                    <div className="theological-paper whitespace-pre-wrap">{msg.content}</div>
                                 </div>
                             </div>
                         ))}
-                        {isLoading && (
-                            <div className="flex items-center gap-3 text-lime-500 animate-pulse font-bold text-xs uppercase tracking-widest ml-4">
-                                <i className="fas fa-circle-notch animate-spin"></i>
-                                <span>Analizando bajo la sana doctrina...</span>
-                            </div>
-                        )}
+                        {isLoading && <div className="text-lime-500 animate-pulse text-xs font-bold tracking-widest"><i className="fas fa-spinner fa-spin mr-2"></i>ANALIZANDO...</div>}
                     </main>
 
-                    <footer className="p-6 md:p-8 border-t border-slate-900 bg-[#16161a]">
-                        <div className="flex gap-4 items-center bg-[#0a0a0c] border border-slate-800 rounded-[2rem] p-2 pl-6 focus-within:border-lime-500 transition-all">
-                            <textarea 
-                                value={input} 
-                                onChange={(e) => setInput(e.target.value)} 
-                                placeholder="Pasaje o tema..." 
-                                className="flex-1 bg-transparent text-white py-4 outline-none resize-none text-lg" 
-                                rows="1"
-                                onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                            />
-                            <button onClick={startSpeech} className={`p-4 rounded-full transition-all ${isListening ? 'text-red-500 animate-bounce' : 'text-slate-500 hover:text-lime-500'}`}>
-                                <i className="fas fa-microphone text-xl"></i>
-                            </button>
-                            <button onClick={handleSend} disabled={!input.trim() || isLoading} className="p-5 rounded-full bg-lime-500 text-black hover:scale-105 active:scale-95 transition-all">
-                                <i className="fas fa-paper-plane text-xl"></i>
-                            </button>
+                    <footer className="p-6 border-t border-slate-800">
+                        <div className="flex gap-3 bg-black/40 border border-slate-700 rounded-2xl p-2 items-center">
+                            <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Pasaje o tema..." className="flex-1 bg-transparent border-none p-3 outline-none text-white resize-none" rows="1" />
+                            <button onClick={() => {
+                                const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                                rec.lang = 'es-PY'; rec.start();
+                                rec.onresult = (e) => setInput(e.results[0][0].transcript);
+                            }} className="text-slate-500 hover:text-lime-500 p-2"><i className="fas fa-microphone text-xl"></i></button>
+                            <button onClick={handleSend} className="bg-lime-500 text-black p-4 rounded-xl hover:scale-105 transition-transform"><i className="fas fa-paper-plane"></i></button>
                         </div>
-                        <p className="text-center text-[9px] text-slate-600 mt-4 uppercase tracking-widest">Admin: Jorge Álvarez | Paraguay 2026</p>
                     </footer>
                 </div>
             );
