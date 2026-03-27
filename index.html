@@ -3,371 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PREDICADOR-PRO - Plataforma de Homilética Profesional</title>
-    <!-- Frameworks y Librerías -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- CONEXIÓN MAESTRA A FIREBASE -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        
-        const myFirebaseConfig = {
-          apiKey: "AIzaSyBf9xen4C3kO4vh08EJMDnVAym7l-S_jRU", 
-          authDomain: "predicador-pro.firebaseapp.com",
-          projectId: "predicador-pro",
-          storageBucket: "predicador-pro.firebasestorage.app",
-          messagingSenderId: "145970938733",
-          appId: "1:145970938733:web:357aa4d0523d2892891064",
-          measurementId: "G-5B5W93LD31"
-        };
-
-        const isLocal = typeof __firebase_config !== 'undefined';
-        const finalConfig = isLocal ? JSON.parse(__firebase_config) : myFirebaseConfig;
-        const finalAppId = isLocal ? (typeof __app_id !== 'undefined' ? __app_id : 'predicador-pro-default') : 'predicador-pro-default';
-
-        try {
-            const app = initializeApp(finalConfig);
-            window.PredicadorDB = {
-                db: getFirestore(app),
-                auth: getAuth(app),
-                doc: doc,
-                getDoc: getDoc,
-                signInAnonymously: signInAnonymously,
-                appId: finalAppId,
-                ready: true
-            };
-        } catch (e) {
-            window.PredicadorDB = { ready: false, error: e.message };
-        }
-    </script>
-
+    <title>PREDICADOR-PRO | Soli Deo Gloria</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
-        
-        :root { --accent: #84cc16; }
-
-        /* MODO OSCURO (Default) */
-        .theme-dark { background-color: #0f0f12; color: #f8fafc; }
-        .theme-dark .app-header { background: rgba(26, 26, 32, 0.9); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .theme-dark .app-footer { background: #1a1a20; border-top: 1px solid rgba(255,255,255,0.05); }
-        .theme-dark .user-bubble { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; }
-
-        /* MODO CLARO (PERGAMINO) */
-        .theme-light { background-color: #fdf6e3; color: #2d2d2d; }
-        .theme-light .app-header { background: rgba(235, 225, 195, 0.9); border-bottom: 1px solid rgba(133, 77, 14, 0.1); }
-        .theme-light .app-footer { background: #efe5c9; border-top: 1px solid rgba(133, 77, 14, 0.1); }
-        .theme-light .user-bubble { background: linear-gradient(135deg, #854d0e, #713f12); color: white; }
-        .theme-light .theological-paper { box-shadow: 0 4px 20px rgba(133, 77, 14, 0.15); }
-        .theme-light textarea { background: #fdf6e3 !important; color: #2d2d2d !important; border-color: #d4c4a1 !important; }
-
-        body { font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; transition: background-color 0.3s ease; }
-        
-        /* ESTILO PAPEL TEOLÓGICO */
-        .theological-paper { 
-            font-family: 'Crimson Pro', serif; 
-            font-size: 1.25rem; 
-            line-height: 1.7; 
-            color: #2d2d2d; 
-            background-color: #fdf6e3; 
-            padding: 2.5rem;
-            border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-            position: relative;
-            border: 1px solid #e5dcc3;
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --accent-color: #d4af37; /* Oro */
+            --parchment: #f4ecd8;
         }
-
-        .theological-paper::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
-            opacity: 0.4;
-            pointer-events: none;
-        }
-
-        .theological-paper h2 { 
-            font-family: 'Playfair Display', serif; 
-            color: #854d0e; 
-            border-bottom: 2px solid rgba(133, 77, 14, 0.2); 
-            margin-top: 2rem; 
-            margin-bottom: 1rem;
-            font-style: italic;
-        }
-        
-        .message-in { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideUp { 
-            from { opacity: 0; transform: translateY(20px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
-
-        .user-bubble {
-            border-radius: 2rem 2rem 0.2rem 2rem;
-            padding: 1.25rem 1.75rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            font-style: italic;
-        }
-
-        .mic-active {
-            animation: pulse-red 1.5s infinite;
-            background-color: #ef4444 !important;
-            color: white !important;
-        }
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
-        
-        /* BOTÓN ACTIVAR ACCESO PREMIUM */
-        .btn-premium {
-            background: linear-gradient(90deg, #84cc16 0%, #65a30d 100%);
-            color: #000;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(132, 204, 22, 0.3);
-        }
-        .btn-premium:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(132, 204, 22, 0.4); }
+        body { font-family: 'Georgia', serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: 0.3s; }
+        .container { max-width: 800px; margin: auto; }
+        h1 { text-align: center; color: var(--accent-color); border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
+        #chat-box { height: 400px; overflow-y: auto; border: 1px solid #333; padding: 15px; margin-bottom: 20px; background: #1e1e1e; border-radius: 8px; }
+        .message { margin-bottom: 15px; line-height: 1.6; }
+        .user { color: var(--accent-color); font-weight: bold; }
+        .bot { color: #fff; }
+        textarea { width: 100%; height: 80px; background: #222; color: #fff; border: 1px solid #444; border-radius: 5px; padding: 10px; font-size: 16px; resize: none; }
+        button { background: var(--accent-color); color: #000; border: none; padding: 12px 25px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #b8962d; }
+        /* Modo Pergamino */
+        .light-mode { background-color: var(--parchment); color: #2c2c2c; }
+        .light-mode #chat-box { background: #fff; border-color: #ccc; color: #2c2c2c; }
+        .light-mode textarea { background: #fff; color: #000; border-color: #ccc; }
+        .light-mode .bot { color: #000; }
+        .controls { text-align: right; margin-bottom: 10px; }
     </style>
 </head>
-<body class="theme-dark">
-    <div id="root"></div>
+<body>
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+<div class="container">
+    <div class="controls">
+        <button onclick="toggleTheme()">☀️ Modo Pergamino</button>
+    </div>
+    <h1>PREDICADOR-PRO</h1>
+    <div id="chat-box"></div>
+    
+    <div id="auth-section">
+        <input type="text" id="license-key" placeholder="Ingresa tu Código de Acceso (Ej: JORGE-PRO-2025)" style="width: 70%; padding: 10px;">
+        <button onclick="verificarLicencia()">ACTIVAR ACCESO</button>
+    </div>
 
-        const SYSTEM_PROMPT = `Actúa como un Asistente Teológico Reformado con 30 años de experiencia. 
-        MARCO: Biblia Inerrante y Confesión de Londres de 1689.
-        OBJETIVO: Generar bosquejos expositivos y estudios bíblicos profundos.
-        ESTILO: Académico, pastoral, riguroso.`;
+    <div id="main-app" style="display:none;">
+        <textarea id="user-input" placeholder="Dicta o escribe tu idea de sermón aquí..."></textarea>
+        <button onclick="enviarConsulta()">GENERAR ESTUDIO BÍBLICO 📖</button>
+        <button onclick="startSpeech()" id="mic-btn">🎤 DICTAR</button>
+    </div>
+    <p style="text-align: center; font-size: 12px; margin-top: 20px; color: #666;">Soli Deo Gloria | Administrado por Jorge Álvarez</p>
+</div>
 
-        const Icon = ({ name, className }) => {
-            useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
-            return <i data-lucide={name} className={className}></i>;
+<script>
+    // --- CONFIGURACIÓN FIREBASE (Tus llaves actuales) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBf9xenhC3kO4vhO8EJMDnVAYm7L-S_jRU",
+        authDomain: "predicador-pro.firebaseapp.com",
+        projectId: "predicador-pro",
+        storageBucket: "predicador-pro.appspot.com",
+        messagingSenderId: "54203135548",
+        appId: "1:54203135548:web:7f3b832b85a3637e96b8c8"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let licenciaActiva = false;
+    let nombrePastor = "Pastor";
+
+    // --- FUNCIÓN DE BIBLIOTECA (La mejora de Berkhof) ---
+    async function obtenerSabiduriaBerkhof() {
+        try {
+            const docRef = db.collection("artifacts/predicador-pro-default/public/data/biblioteca").doc("BERKHOF");
+            const doc = await docRef.get();
+            if (doc.exists) {
+                const data = doc.data();
+                // Une todos los campos que hayas creado (introduccion, doctrina, etc.)
+                return Object.entries(data).map(([titulo, texto]) => `[Referencia: ${titulo}] ${texto}`).join("\n\n");
+            }
+        } catch (e) { console.error("Error leyendo biblioteca:", e); }
+        return "No hay referencias adicionales en la biblioteca.";
+    }
+
+    async function verificarLicencia() {
+        const key = document.getElementById('license-key').value.trim().toUpperCase();
+        const docRef = db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key);
+        
+        const doc = await docRef.get();
+        if (doc.exists && doc.data().active === true) {
+            licenciaActiva = true;
+            nombrePastor = doc.data().pastorName || "Pastor";
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            addMessage("Sistema", `Bienvenido, ${nombrePastor}. Acceso verificado. La biblioteca de Berkhof está lista.`);
+        } else {
+            alert("Código inválido o suscripción inactiva. Contacte a Jorge Álvarez.");
+        }
+    }
+
+    async function enviarConsulta() {
+        const input = document.getElementById('user-input');
+        const query = input.value.trim();
+        if (!query) return;
+
+        addMessage("Tú", query);
+        input.value = "";
+
+        // Consultamos la biblioteca antes de responder
+        const sabiduria = await obtenerSabiduriaBerkhof();
+
+        const promptFinal = `Eres un asistente teológico reformado. 
+        Instrucciones: Responde con rigor exegético basándote en la Confesión de Londres de 1689.
+        CONOCIMIENTO ADICIONAL DE TU BIBLIOTECA (Usa esto para enriquecer tu respuesta):
+        ${sabiduria}
+        
+        Pregunta del Pastor: ${query}`;
+
+        // Aquí conectas con tu API de IA (Gemini/OpenAI) 
+        // Por ahora simulamos la respuesta para que veas la estructura
+        setTimeout(() => {
+            addMessage("Asistente", `Analizando bajo la lente de Berkhof y la 1689... [Respuesta teológica en proceso]`);
+        }, 1000);
+    }
+
+    function addMessage(sender, text) {
+        const chatBox = document.getElementById('chat-box');
+        const div = document.createElement('div');
+        div.className = "message";
+        div.innerHTML = `<span class="${sender === 'Tú' ? 'user' : 'bot'}">${sender}:</span> ${text}`;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+    }
+
+    // --- RECONOCIMIENTO DE VOZ ---
+    function startSpeech() {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'es-PY';
+        document.getElementById('mic-btn').innerText = "🔴 ESCUCHANDO...";
+        recognition.start();
+
+        recognition.onresult = (event) => {
+            document.getElementById('user-input').value = event.results[0][0].transcript;
+            document.getElementById('mic-btn').innerText = "🎤 DICTAR";
         };
+        recognition.onerror = () => { document.getElementById('mic-btn').innerText = "🎤 DICTAR"; };
+    }
+</script>
 
-        const FormattedResponse = ({ text }) => (
-            <div className="theological-paper">
-                {text.split('\n').map((line, i) => {
-                    if (line.startsWith('##')) return <h2 key={i}>{line.replace(/##/g, '')}</h2>;
-                    if (line.trim().startsWith('-')) return <li key={i} className="ml-6 mb-2">{line.replace('-', '')}</li>;
-                    return <p key={i} className={line.trim() ? "mb-4" : "h-2"}>{line}</p>;
-                })}
-            </div>
-        );
-
-        const App = () => {
-            const [messages, setMessages] = useState([]);
-            const [input, setInput] = useState('');
-            const [isLoading, setIsLoading] = useState(false);
-            const [activeKey, setActiveKey] = useState(null);
-            const [isLicenseValid, setIsLicenseValid] = useState(false);
-            const [showSettings, setShowSettings] = useState(!localStorage.getItem('predicador_license'));
-            const [isListening, setIsListening] = useState(false);
-            const [theme, setTheme] = useState('dark');
-            const scrollRef = useRef(null);
-
-            useEffect(() => {
-                document.body.className = `theme-${theme}`;
-            }, [theme]);
-
-            useEffect(() => {
-                if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-            }, [messages, isLoading]);
-
-            const startSpeech = () => {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SpeechRecognition) {
-                    alert("Tu navegador no soporta dictado por voz.");
-                    return;
-                }
-                const recognition = new SpeechRecognition();
-                recognition.lang = 'es-ES';
-                recognition.start();
-                setIsListening(true);
-
-                recognition.onresult = (event) => {
-                    const text = event.results[0][0].transcript;
-                    setInput(text);
-                    setIsListening(false);
-                };
-
-                recognition.onerror = () => setIsListening(false);
-                recognition.onend = () => setIsListening(false);
-            };
-
-            const validateLicense = async (code) => {
-                if (!code) return;
-                try {
-                    await window.PredicadorDB.signInAnonymously(window.PredicadorDB.auth);
-                    const { db, appId, doc, getDoc } = window.PredicadorDB;
-                    const licenseRef = doc(db, 'artifacts', appId, 'public', 'data', 'licenses', code.trim().toUpperCase());
-                    const snap = await getDoc(licenseRef);
-                    if (snap.exists() && snap.data().active) {
-                        setActiveKey(snap.data().apiKey || snap.data().apikey);
-                        setIsLicenseValid(true);
-                        localStorage.setItem('predicador_license', code.trim().toUpperCase());
-                        setShowSettings(false);
-                    } else { alert("Código de suscripción incorrecto o inactivo."); }
-                } catch (err) { alert("Error de conexión con la base de datos."); }
-            };
-
-            useEffect(() => {
-                const stored = localStorage.getItem('predicador_license');
-                if (stored && window.PredicadorDB?.ready) validateLicense(stored);
-            }, [window.PredicadorDB?.ready]);
-
-            const handleSend = async () => {
-                if (!input.trim() || isLoading) return;
-                const updated = [...messages, { role: 'user', content: input }];
-                setMessages(updated);
-                setInput('');
-                setIsLoading(true);
-
-                try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeKey}`;
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            contents: updated.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
-                            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] }
-                        })
-                    });
-                    const data = await res.json();
-                    setMessages([...updated, { role: 'assistant', content: data.candidates[0].content.parts[0].text }]);
-                } catch (e) { alert("Error de servidor IA."); } 
-                finally { setIsLoading(false); }
-            };
-
-            return (
-                <div className="flex flex-col h-screen max-w-5xl mx-auto border-x border-white/5 relative">
-                    <header className="flex items-center justify-between px-8 py-4 glass-header z-10 app-header">
-                        <div className="flex items-center gap-4">
-                            <div className="p-2 bg-lime-500/10 rounded-xl border border-lime-500/20">
-                                <Icon name="shield" className="w-6 h-6 text-lime-400" />
-                            </div>
-                            <div className="text-left">
-                                <h1 className="text-lg font-bold tracking-tight">PREDICADOR-PRO</h1>
-                                <p className="text-[9px] font-black tracking-[0.3em] text-slate-500 uppercase leading-none">Soli Deo Gloria</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <button 
-                                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                                className="p-2 hover:bg-black/10 rounded-full transition-all"
-                                title="Cambiar Tema"
-                            >
-                                <Icon name={theme === 'dark' ? 'sun' : 'moon'} className="w-5 h-5" />
-                            </button>
-                            <div className="flex items-center gap-1.5 bg-lime-500/10 border border-lime-500/30 px-3 py-1 rounded-full">
-                                <div className="w-1.5 h-1.5 bg-lime-500 rounded-full animate-pulse"></div>
-                                <span className="text-[10px] font-black text-lime-600 tracking-tighter uppercase">PRO</span>
-                            </div>
-                            <button onClick={() => { localStorage.removeItem('predicador_license'); window.location.reload(); }} className="text-slate-500 hover:text-red-400">
-                                <Icon name="log-out" className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </header>
-
-                    <main ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-12 space-y-12">
-                        {messages.length === 0 && (
-                            <div className="flex flex-col items-center justify-center h-full text-center opacity-30 space-y-6">
-                                <Icon name="book-open" className="w-24 h-24 text-lime-500" />
-                                <h2 className="text-4xl font-black italic tracking-tighter">Estudio Teológico</h2>
-                                <p className="italic">"Escudriñad las Escrituras..."</p>
-                            </div>
-                        )}
-                        {messages.map((msg, i) => (
-                            <div key={i} className={`flex flex-col message-in ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                {msg.role === 'user' ? (
-                                    <div className="user-bubble max-w-[85%] text-lg">
-                                        {msg.content}
-                                    </div>
-                                ) : (
-                                    <div className="max-w-[95%]">
-                                        <FormattedResponse text={msg.content} />
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                        {isLoading && (
-                            <div className="flex items-center gap-3 text-lime-500 animate-pulse ml-4 font-bold text-xs uppercase tracking-widest">
-                                <Icon name="loader-2" className="w-5 h-5 animate-spin" />
-                                <span>Consultando el Canon Bíblico...</span>
-                            </div>
-                        )}
-                    </main>
-
-                    <footer className="p-6 md:p-8 app-footer">
-                        <div className="flex gap-4 max-w-4xl mx-auto items-center">
-                            <button 
-                                onClick={startSpeech}
-                                className={`p-5 rounded-2xl transition-all ${isListening ? 'mic-active' : 'bg-black/10 text-slate-500 hover:text-lime-500'}`}
-                            >
-                                <Icon name={isListening ? "mic" : "mic-off"} className="w-6 h-6" />
-                            </button>
-                            <textarea 
-                                value={input} 
-                                onChange={(e) => setInput(e.target.value)} 
-                                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                                placeholder="Escribe o dicta un pasaje..." 
-                                className="w-full bg-transparent border border-slate-700/50 rounded-2xl px-6 py-4 outline-none focus:ring-1 focus:ring-lime-500 transition-all resize-none shadow-inner" 
-                                rows="1" 
-                            />
-                            <button onClick={handleSend} disabled={!input.trim() || isLoading} className="p-6 rounded-2xl bg-lime-500 text-black shadow-lg hover:bg-lime-400 active:scale-95 transition-all">
-                                <Icon name="send" className="w-6 h-6" />
-                            </button>
-                        </div>
-                    </footer>
-
-                    {showSettings && (
-                        <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-xl">
-                            <div className="p-10 md:p-16 rounded-[3.5rem] border border-white/10 bg-[#1a1a20] text-center space-y-10 max-w-md w-full shadow-2xl relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-lime-500"></div>
-                                <Icon name="shield-check" className="w-20 h-20 mx-auto text-lime-500" />
-                                <div className="space-y-2">
-                                    <h3 className="text-3xl font-black uppercase text-white tracking-tighter">Mi Suscripción</h3>
-                                    <p className="text-slate-400 text-xs tracking-widest">ACCESO PROFESIONAL</p>
-                                </div>
-                                
-                                <input 
-                                    type="text" 
-                                    placeholder="CÓDIGO DE ACCESO..." 
-                                    className="w-full border p-6 rounded-[2rem] text-center bg-[#0b0b0d] border-slate-700 text-white font-mono tracking-widest outline-none focus:border-lime-500 transition-all text-lg" 
-                                    onKeyDown={(e) => { if (e.key === 'Enter') validateLicense(e.target.value); }}
-                                    id="license-input"
-                                />
-                                
-                                <button 
-                                    onClick={() => validateLicense(document.getElementById('license-input').value)} 
-                                    className="w-full py-6 rounded-[2.5rem] btn-premium transition-all"
-                                >
-                                    Activar Acceso
-                                </button>
-                                
-                                <p className="text-slate-500 text-[10px] uppercase tracking-widest leading-relaxed">
-                                    Ingrese su código único de PREDICADOR-PRO para habilitar el motor teológico
-                                </p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
 </body>
 </html>
