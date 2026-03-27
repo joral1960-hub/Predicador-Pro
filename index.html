@@ -3,136 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PREDICADOR-PRO | Acceso Ministerial</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>PREDICADOR-PRO - Plataforma de Homilética Profesional</title>
+    <!-- Frameworks y Librerías -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- CONEXIÓN MAESTRA A FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        
+        // ========================================================================
+        // JORGE: PEGA AQUÍ TUS DATOS (Los que sacaste de la pestaña General)
+        // ========================================================================
+        const myFirebaseConfig = {
+          apiKey: "AIzaSyC3tAC8y7E1SfnTWi08fwq7gMXP_mnmpfw", 
+          authDomain: "predicador-pro.firebaseapp.com",
+          projectId: "predicador-pro",
+          storageBucket: "predicador-pro.firebasestorage.app",
+          messagingSenderId: "145970938733",
+          appId: "1:145970938733:web:357aa4d0523d2892891064",
+          measurementId: "G-5B5W93LD31" 
+        };
+
+        const isCanvas = typeof __firebase_config !== 'undefined';
+        const finalConfig = isCanvas ? JSON.parse(__firebase_config) : myFirebaseConfig;
+        const finalAppId = isCanvas ? (typeof __app_id !== 'undefined' ? __app_id : 'predicador-pro-default') : 'predicador-pro-default';
+
+        try {
+            const app = initializeApp(finalConfig);
+            window.PredicadorDB = {
+                db: getFirestore(app),
+                auth: getAuth(app),
+                doc: doc,
+                getDoc: getDoc,
+                signInAnonymously: signInAnonymously,
+                appId: finalAppId,
+                ready: true
+            };
+        } catch (e) {
+            window.PredicadorDB = { ready: false, error: e.message };
+        }
+    </script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:wght@400;700&display=swap');
-
-        :root {
-            --gold: #d4af37;
-            --bg: #0a0a0b;
-            --card: #161618;
-            --text: #e8e8e8;
-            --parchment: #f4ecd8;
-        }
-
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Playfair Display', serif;
-            display: flex; justify-content: center; align-items: center;
-        }
-
-        .app-container {
-            width: 90%; max-width: 500px;
-            background: var(--card);
-            padding: 50px 40px;
-            border-radius: 4px;
-            box-shadow: 0 40px 80px rgba(0,0,0,0.9);
-            border-top: 4px solid var(--gold);
-            text-align: center;
-            position: relative;
-        }
-
-        h1 { font-family: 'Cinzel', serif; color: var(--gold); letter-spacing: 5px; font-size: 26px; margin: 0; text-transform: uppercase; }
-        .motto { font-size: 10px; letter-spacing: 4px; color: #666; margin-bottom: 40px; text-transform: uppercase; }
-        .bible-icon { font-size: 70px; color: #d3c4a8; margin-bottom: 30px; opacity: 0.8; }
-
-        .input-group { text-align: left; margin-bottom: 30px; }
-        label { display: block; color: var(--gold); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; font-weight: bold; }
-
-        input, textarea {
-            width: 100%; background: #000; border: 1px solid #2a2a2c;
-            color: #fff; padding: 15px; box-sizing: border-box;
-            font-family: 'Playfair Display', serif; font-size: 16px;
-        }
-
-        .btn-gold {
-            width: 100%; padding: 18px; background: var(--gold);
-            color: #000; border: none; font-weight: bold;
-            cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
-            font-size: 13px; transition: 0.3s;
-        }
-        .btn-gold:hover { background: #fff; transform: translateY(-2px); }
-
-        .theme-switcher { position: absolute; top: 20px; right: 25px; color: var(--gold); font-size: 20px; cursor: pointer; }
-        .light-mode { background-color: #333 !important; }
-        .light-mode .app-container { background: var(--parchment); color: #1a1a1a; border-top: 4px solid #8b4513; }
-        .light-mode h1, .light-mode label { color: #8b4513; }
-        .light-mode input, .light-mode textarea { background: #fff; color: #000; border: 1px solid #d3c4a8; }
-        .light-mode .btn-gold { background: #8b4513; color: #fff; }
-
-        .footer { margin-top: 40px; font-size: 10px; color: #444; letter-spacing: 1px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Crimson+Pro:wght@400;600&display=swap');
+        body { font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; background-color: #0f0f12; color: #f8fafc; }
+        .theological-paper { font-family: 'Crimson Pro', serif; font-size: 1.25rem; line-height: 1.8; color: #cbd5e1; }
+        .badge-pro { background: linear-gradient(90deg, #84cc16 0%, #bef264 100%); color: #000; font-size: 10px; padding: 2px 12px; border-radius: 99px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        .glass-effect { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .message-in { animation: slideUp 0.5s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        textarea::placeholder { color: #475569; }
     </style>
 </head>
-<body id="main-body">
+<body>
+    <div id="root"></div>
 
-    <div class="app-container">
-        <div class="theme-switcher" onclick="toggleTheme()">
-            <i class="fas fa-scroll"></i>
-        </div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
-        <h1>PREDICADOR-PRO</h1>
-        <div class="motto">Soli Deo Gloria</div>
+        const SYSTEM_PROMPT = `Eres el Asistente Teológico Reformado de Jorge Álvarez (PREDICADOR-PRO). 
+        MARCO: Biblia y Confesión de 1689. Tono académico y pastoral.`;
 
-        <div id="auth-box">
-            <div class="bible-icon"><i class="fas fa-book-open"></i></div>
-            <div class="input-group">
-                <label>Credencial de Acceso Ministerial</label>
-                <input type="text" id="license-key" placeholder="INGRESE SU CÓDIGO">
+        const Icon = ({ name, className }) => {
+            useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        const FormattedResponse = ({ text }) => (
+            <div className="theological-paper text-left">
+                {text.split('\n').map((line, i) => (
+                    <p key={i} className={line.trim() ? "mb-4" : "h-4"}>{line}</p>
+                ))}
             </div>
-            <button class="btn-gold" onclick="verificarLicencia()">Activar Ministerio</button>
-        </div>
+        );
 
-        <div id="main-app" style="display: none;">
-            <div class="input-group">
-                <label>Consulta o Pasaje Bíblico</label>
-                <textarea id="user-input" rows="5" placeholder="Escriba aquí..."></textarea>
-            </div>
-            <button class="btn-gold" onclick="alert('Estudio procesado con éxito.')">GENERAR ESTUDIO PROFUNDO</button>
-            <div style="margin-top: 20px;">
-                <i class="fas fa-microphone" style="color:var(--gold); cursor:pointer; font-size: 24px;" onclick="startSpeech()"></i>
-            </div>
-        </div>
+        const App = () => {
+            const [messages, setMessages] = useState([]);
+            const [input, setInput] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const [licenseCode, setLicenseCode] = useState(localStorage.getItem('predicador_license') || '');
+            const [activeKey, setActiveKey] = useState(null);
+            const [isLicenseValid, setIsLicenseValid] = useState(false);
+            const [showSettings, setShowSettings] = useState(!localStorage.getItem('predicador_license'));
+            const [authError, setAuthError] = useState(null);
 
-        <div class="footer">ADMIN: JORGE ÁLVAREZ | VILLA ELIZA, PY</div>
-    </div>
+            const validateLicense = async (code) => {
+                if (!code) return;
+                setAuthError(null);
+                
+                if (!window.PredicadorDB || !window.PredicadorDB.ready) {
+                    setTimeout(() => validateLicense(code), 1000);
+                    return;
+                }
 
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBf9xenhC3kO4vhO8EJMDnVAYm7L-S_jRU",
-        authDomain: "predicador-pro.firebaseapp.com",
-        projectId: "predicador-pro",
-        storageBucket: "predicador-pro.appspot.com",
-        messagingSenderId: "54203135548",
-        appId: "1:54203135548:web:7f3b832b85a3637e96b8c8"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+                try {
+                    await window.PredicadorDB.signInAnonymously(window.PredicadorDB.auth);
+                    const { db, appId, doc, getDoc } = window.PredicadorDB;
+                    
+                    const licenseRef = doc(db, 'artifacts', appId, 'public', 'data', 'licenses', code.trim().toUpperCase());
+                    const licenseSnap = await getDoc(licenseRef);
+                    
+                    if (licenseSnap.exists()) {
+                        const data = licenseSnap.data();
+                        if (data.active === true) {
+                            // FLEXIBILIDAD: Acepta tanto 'apiKey' como 'apikey'
+                            const key = data.apiKey || data.apikey;
+                            if (key) {
+                                setActiveKey(key);
+                                setIsLicenseValid(true);
+                                localStorage.setItem('predicador_license', code.trim().toUpperCase());
+                                setShowSettings(false);
+                            } else {
+                                setAuthError("No se encontró la llave API dentro del documento.");
+                            }
+                        } else {
+                            setAuthError("Suscripción encontrada pero está INACTIVA.");
+                        }
+                    } else {
+                        setAuthError(`No encontré el código '${code.toUpperCase()}' en la ruta final.`);
+                    }
+                } catch (err) {
+                    setAuthError(`Error: ${err.message}`);
+                }
+            };
 
-    function toggleTheme() {
-        document.getElementById('main-body').classList.toggle('light-mode');
-    }
+            useEffect(() => { if (licenseCode) validateLicense(licenseCode); }, []);
 
-    async function verificarLicencia() {
-        const key = document.getElementById('license-key').value.trim().toUpperCase();
-        const doc = await db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key).get();
-        if (doc.exists && doc.data().active) {
-            document.getElementById('auth-box').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-        } else {
-            alert("Acceso No Autorizado.");
-        }
-    }
+            const handleSend = async () => {
+                if (!input.trim() || isLoading || !isLicenseValid) return;
+                const userMsg = { role: 'user', content: input };
+                const newHistory = [...messages, userMsg];
+                setMessages(newHistory);
+                setInput('');
+                setIsLoading(true);
 
-    function startSpeech() {
-        const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        rec.lang = 'es-PY'; rec.start();
-        rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; };
-    }
-</script>
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeKey}`;
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: SYSTEM_PROMPT + "\n" + input }] }] })
+                    });
+                    const data = await res.json();
+                    if (data.error) throw new Error(data.error.message);
+                    setMessages([...newHistory, { role: 'assistant', content: data.candidates[0].content.parts[0].text }]);
+                } catch (err) { alert("Error en el motor de IA."); } finally { setIsLoading(false); }
+            };
+
+            return (
+                <div className="flex flex-col h-screen max-w-5xl mx-auto border-x border-slate-800 bg-[#0f0f12]">
+                    <header className="flex items-center justify-between px-8 py-6 border-b border-slate-800 bg-[#1a1a20]/80 glass-effect">
+                        <div className="flex items-center gap-5">
+                            <div className="p-3 rounded-2xl bg-lime-500/10 text-lime-400 border border-lime-500/20"><Icon name="shield" className="w-6 h-6" /></div>
+                            <div>
+                                <h1 className="text-xl font-bold text-white leading-none mb-1 text-left">PREDICADOR-PRO</h1>
+                                <p className="text-[10px] font-bold tracking-[0.25em] text-slate-500 text-left uppercase">Soli Deo Gloria</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <span className="badge-pro">{isLicenseValid ? 'PRO' : 'LOCK'}</span>
+                            {isLicenseValid && (
+                                <button onClick={() => { localStorage.removeItem('predicador_license'); window.location.reload(); }} className="text-slate-500 hover:text-red-400"><Icon name="log-out" className="w-5 h-5" /></button>
+                            )}
+                        </div>
+                    </header>
+
+                    <main className="flex-1 overflow-y-auto p-8 md:p-12 space-y-12">
+                        {messages.length === 0 && (
+                            <div className="flex flex-col items-center justify-center h-full text-center opacity-20 message-in">
+                                <Icon name="book-marked" className="w-32 h-32 mb-8 text-lime-500" />
+                                <h2 className="text-5xl font-extrabold italic text-white tracking-tighter">Estudio Teológico</h2>
+                                <p className="mt-4 text-slate-400 italic">"Escudriñad las Escrituras..."</p>
+                            </div>
+                        )}
+                        {messages.map((msg, i) => (
+                            <div key={i} className={`flex flex-col message-in ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                                <div className={`p-6 md:p-8 rounded-[2rem] max-w-[95%] md:max-w-[85%] border shadow-xl ${msg.role === 'user' ? 'bg-blue-600 border-blue-500 text-white rounded-tr-none' : 'bg-[#1a1a20] border-slate-800 rounded-tl-none'}`}>
+                                    {msg.role === 'user' ? <p className="italic text-right">{msg.content}</p> : <FormattedResponse text={msg.content} />}
+                                </div>
+                            </div>
+                        ))}
+                        {isLoading && (
+                            <div className="flex items-center gap-3 text-lime-500 animate-pulse font-bold text-xs uppercase tracking-widest ml-4">
+                                <Icon name="loader-2" className="w-5 h-5 animate-spin" />
+                                <span>Analizando bajo la sana doctrina...</span>
+                            </div>
+                        )}
+                    </main>
+
+                    <footer className="p-6 md:p-8 border-t border-slate-800 bg-[#1a1a20]">
+                        <div className="flex gap-4">
+                            <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Pasaje o tema..." disabled={!isLicenseValid} className="w-full bg-[#0f0f12] text-white border border-slate-700 rounded-2xl px-6 py-4 outline-none focus:ring-1 focus:ring-lime-500 transition-all resize-none shadow-inner" rows="1" />
+                            <button onClick={handleSend} disabled={!input.trim() || isLoading} className="p-7 rounded-[2rem] bg-lime-500 text-black shadow-lg shadow-lime-500/20 active:scale-95 transition-all"><Icon name="send" className="w-7 h-7" /></button>
+                        </div>
+                    </footer>
+
+                    {showSettings && (
+                        <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50">
+                            <div className="p-8 md:p-16 rounded-[3rem] border border-slate-800 bg-[#1a1a20] text-center space-y-8 max-w-2xl w-full shadow-2xl overflow-y-auto max-h-[95vh]">
+                                <Icon name="shield-check" className="w-20 h-20 mx-auto text-lime-500" />
+                                <h3 className="text-3xl font-black uppercase text-white tracking-tighter leading-none">Mi Suscripción</h3>
+                                
+                                {authError && (
+                                    <div className="bg-red-500/10 border border-red-500/30 p-6 rounded-3xl text-left space-y-4">
+                                        <p className="text-red-400 font-bold flex items-center gap-2 text-lg leading-tight">
+                                            <Icon name="alert-circle" className="w-6 h-6" />
+                                            ¡Casi lo logras!
+                                        </p>
+                                        <div className="text-sm text-slate-300 space-y-3 border-t border-red-500/20 pt-4">
+                                            <p className="font-bold">El sistema no encuentra tu llave:</p>
+                                            <p>{authError}</p>
+                                            <p className="text-xs italic text-slate-500">Asegúrate de haber guardado los cambios en Firebase y de haber puesto tus datos reales en el código de GitHub.</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <input type="text" value={licenseCode} onChange={(e) => setLicenseCode(e.target.value)} placeholder="CÓDIGO DE ACCESO..." className="w-full border p-6 rounded-[2rem] text-center bg-[#0b0b0d] border-slate-700 text-white font-mono tracking-widest outline-none focus:border-lime-500" />
+                                <button onClick={() => validateLicense(licenseCode)} className="w-full bg-lime-500 text-black py-6 rounded-[2.5rem] font-bold uppercase tracking-widest shadow-xl shadow-lime-500/20 hover:bg-lime-400 transition-colors">Activar Acceso</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
