@@ -9,162 +9,78 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:wght@400;700&display=swap');
-
-        :root {
-            --gold: #d4af37;
-            --bg: #0a0a0b;
-            --card: #161618;
-            --text: #e8e8e8;
-            --parchment: #f4ecd8;
-        }
-
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Playfair Display', serif;
-            display: flex; justify-content: center; align-items: center;
-            transition: background 0.5s ease;
-        }
-
-        .app-container {
-            width: 90%; max-width: 550px;
-            background: var(--card);
-            padding: 50px 40px;
-            border-radius: 4px;
-            box-shadow: 0 40px 80px rgba(0,0,0,0.9);
-            border-top: 4px solid var(--gold);
-            text-align: center;
-            position: relative;
-        }
-
+        :root { --gold: #d4af37; --bg: #0a0a0b; --card: #161618; --text: #e8e8e8; --parchment: #f4ecd8; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg); color: var(--text); font-family: 'Playfair Display', serif; display: flex; justify-content: center; align-items: center; transition: 0.5s; }
+        .app-container { width: 90%; max-width: 550px; background: var(--card); padding: 50px 40px; border-radius: 4px; box-shadow: 0 40px 80px rgba(0,0,0,0.9); border-top: 4px solid var(--gold); text-align: center; position: relative; transition: 0.5s; }
         h1 { font-family: 'Cinzel', serif; color: var(--gold); letter-spacing: 5px; font-size: 26px; margin: 0; text-transform: uppercase; }
         .motto { font-size: 10px; letter-spacing: 4px; color: #666; margin-bottom: 40px; text-transform: uppercase; }
-        .bible-icon { font-size: 70px; color: #d3c4a8; margin-bottom: 30px; opacity: 0.8; }
-
-        .input-group { text-align: left; margin-bottom: 30px; }
-        label { display: block; color: var(--gold); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; font-weight: bold; }
-
-        input, textarea {
-            width: 100%; background: #000; border: 1px solid #2a2a2c;
-            color: #fff; padding: 15px; box-sizing: border-box;
-            font-family: 'Playfair Display', serif; font-size: 16px;
-        }
-
-        .btn-gold {
-            width: 100%; padding: 18px; background: var(--gold);
-            color: #000; border: none; font-weight: bold;
-            cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
-            font-size: 13px; transition: 0.3s;
-        }
-        .btn-gold:hover { background: #fff; transform: translateY(-2px); }
-
-        /* MODO PERGAMINO */
+        .bible-icon { font-size: 70px; color: #d3c4a8; margin-bottom: 30px; }
+        label { display: block; color: var(--gold); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; font-weight: bold; text-align: left;}
+        input, textarea { width: 100%; background: #000; border: 1px solid #2a2a2c; color: #fff; padding: 15px; box-sizing: border-box; font-family: 'Playfair Display', serif; font-size: 16px; margin-bottom: 20px;}
+        .btn-gold { width: 100%; padding: 18px; background: var(--gold); color: #000; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; font-size: 13px; transition: 0.3s; }
+        .btn-gold:hover { background: #fff; }
+        
+        /* EL PERGAMINO DE RESULTADO */
+        #resultado-teologico { display: none; margin-top: 30px; padding: 20px; border: 1px dashed var(--gold); background: rgba(212, 175, 55, 0.05); text-align: left; font-style: italic; line-height: 1.6; color: var(--gold); border-radius: 4px; animation: fadeIn 1s; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .light-mode { background-color: #333 !important; }
         .light-mode .app-container { background: var(--parchment); color: #1a1a1a; border-top: 4px solid #8b4513; }
         .light-mode h1, .light-mode label { color: #8b4513; }
         .light-mode input, .light-mode textarea { background: #fff; color: #000; border: 1px solid #d3c4a8; }
         .light-mode .btn-gold { background: #8b4513; color: #fff; }
-        .light-mode .bible-icon { color: #8b4513; }
-
-        .theme-switcher { position: absolute; top: 20px; right: 25px; color: var(--gold); font-size: 20px; }
-        .theme-switcher i { cursor: pointer; margin-left: 15px; }
-
-        .footer { margin-top: 40px; font-size: 10px; color: #444; letter-spacing: 1px; }
+        .light-mode #resultado-teologico { color: #5d4037; border-color: #8b4513; background: rgba(139, 69, 19, 0.05); }
+        .theme-switcher { position: absolute; top: 20px; right: 25px; color: var(--gold); font-size: 20px; cursor: pointer; }
+        .theme-switcher i { margin-left: 15px; }
     </style>
 </head>
 <body id="body-tag">
-
     <div class="app-container">
         <div class="theme-switcher">
             <i class="fas fa-moon" onclick="toggleTheme('dark')"></i>
             <i class="fas fa-scroll" onclick="toggleTheme('light')"></i>
         </div>
-
         <h1>PREDICADOR-PRO</h1>
         <div class="motto">Soli Deo Gloria</div>
-
         <div id="auth-box">
             <div class="bible-icon"><i class="fas fa-book-open"></i></div>
-            <div class="input-group">
-                <label>Credencial de Acceso Ministerial</label>
-                <input type="text" id="license-key" placeholder="INGRESE SU CÓDIGO">
-            </div>
-            <button class="btn-gold" id="btn-login" onclick="verificarLicencia()">Activar Ministerio</button>
+            <label>Credencial de Acceso Ministerial</label>
+            <input type="text" id="license-key" placeholder="INGRESE SU CÓDIGO">
+            <button class="btn-gold" onclick="verificarLicencia()">Activar Ministerio</button>
         </div>
-
         <div id="main-app" style="display: none;">
-            <div class="input-group">
-                <label>Consulta o Pasaje Bíblico</label>
-                <textarea id="user-input" rows="5" placeholder="Escriba su pasaje..."></textarea>
-            </div>
+            <label>Consulta o Pasaje Bíblico</label>
+            <textarea id="user-input" rows="4" placeholder="Escriba su pasaje..."></textarea>
             <button class="btn-gold" onclick="procesarConsulta()">GENERAR ESTUDIO PROFUNDO</button>
-            <div style="margin-top: 20px;">
-                <i class="fas fa-microphone" style="color:var(--gold); cursor:pointer; font-size: 24px;" onclick="startSpeech()"></i>
-            </div>
-            <p id="status-text" style="font-size: 12px; color: var(--gold); margin-top: 20px; font-style: italic;"></p>
+            <div id="status-text" style="font-size: 12px; color: var(--gold); margin-top: 15px; font-style: italic; min-height: 20px;"></div>
+            <div id="resultado-teologico"></div>
+            <div style="margin-top: 20px;"><i class="fas fa-microphone" style="color:var(--gold); cursor:pointer; font-size: 24px;" onclick="startSpeech()"></i></div>
         </div>
-
-        <div class="footer">ADMIN: JORGE ÁLVAREZ | VILLA ELISA, PY</div>
+        <div style="margin-top: 40px; font-size: 10px; color: #444;">ADMIN: JORGE ÁLVAREZ | VILLA ELISA, PY</div>
     </div>
-
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBf9xenhC3kO4vhO8EJMDnVAYm7L-S_jRU",
-        authDomain: "predicador-pro.firebaseapp.com",
-        projectId: "predicador-pro",
-        storageBucket: "predicador-pro.appspot.com",
-        messagingSenderId: "54203135548",
-        appId: "1:54203135548:web:7f3b832b85a3637e96b8c8"
-    };
+    const firebaseConfig = { apiKey: "AIzaSyBf9xenhC3kO4vhO8EJMDnVAYm7L-S_jRU", authDomain: "predicador-pro.firebaseapp.com", projectId: "predicador-pro", storageBucket: "predicador-pro.appspot.com", messagingSenderId: "54203135548", appId: "1:54203135548:web:7f3b832b85a3637e96b8c8" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-
-    // 1. FUNCIÓN TEMA (CORREGIDA)
-    function toggleTheme(mode) {
-        const body = document.getElementById('body-tag');
-        if(mode === 'light') body.classList.add('light-mode');
-        else body.classList.remove('light-mode');
-    }
-
-    // 2. FUNCIÓN ACCESO (CORREGIDA)
+    function toggleTheme(mode) { const body = document.getElementById('body-tag'); if(mode === 'light') body.classList.add('light-mode'); else body.classList.remove('light-mode'); }
     async function verificarLicencia() {
-        const keyInput = document.getElementById('license-key');
-        const key = keyInput.value.trim().toUpperCase();
-        if(!key) { alert("Por favor, ingrese un código."); return; }
-        
-        try {
-            const docRef = db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key);
-            const doc = await docRef.get();
-            if (doc.exists && doc.data().active === true) {
-                document.getElementById('auth-box').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-            } else {
-                alert("Código inválido o inactivo.");
-            }
-        } catch(e) {
-            console.error(e);
-            alert("Error de conexión con el servidor.");
-        }
+        const key = document.getElementById('license-key').value.trim().toUpperCase();
+        if(!key) return;
+        const doc = await db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key).get();
+        if (doc.exists && doc.data().active) { document.getElementById('auth-box').style.display = 'none'; document.getElementById('main-app').style.display = 'block'; }
+        else { alert("Acceso No Autorizado."); }
     }
-
-    // 3. FUNCIÓN VOZ
-    function startSpeech() {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'es-PY';
-        recognition.start();
-        recognition.onresult = (event) => {
-            document.getElementById('user-input').value = event.results[0][0].transcript;
-        };
-    }
-
+    function startSpeech() { const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); rec.lang = 'es-PY'; rec.start(); rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; }; }
     function procesarConsulta() {
         const status = document.getElementById('status-text');
+        const res = document.getElementById('resultado-teologico');
         status.innerText = "Sincronizando fuentes doctrinales...";
+        res.style.display = "none";
         setTimeout(() => { 
-            status.innerText = "Análisis completado.";
-            alert("Estudio procesado bajo el rigor de la Confesión de 1689.");
-        }, 1500);
+            status.innerText = "";
+            res.style.display = "block";
+            res.innerHTML = "<strong>Soli Deo Gloria:</strong> El bosquejo para su pasaje ha sido procesado bajo el rigor de la Confesión de 1689. <br><br> [Aquí aparecerá el texto de la IA en el siguiente paso]";
+        }, 2000);
     }
 </script>
 </body>
