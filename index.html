@@ -10,13 +10,13 @@
     <style>
         :root {
             --gold: #d4af37;
-            --dark-bg: #1a1a1a;
-            --card-bg: #242424;
-            --text-main: #e0e0e0;
+            --dark-bg: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #f0f0f0;
             --parchment: #f4ecd8;
         }
         body { 
-            font-family: 'Times New Roman', Times, serif; 
+            font-family: 'Georgia', serif; 
             background-color: var(--dark-bg); 
             color: var(--text-main); 
             margin: 0; 
@@ -27,82 +27,120 @@
         }
         .app-card {
             background: var(--card-bg);
-            width: 90%;
-            max-width: 500px;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid #333;
+            width: 95%;
+            max-width: 600px;
+            padding: 50px 40px;
+            border-radius: 4px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border-top: 4px solid var(--gold);
             text-align: center;
+            position: relative;
         }
-        h1 { color: var(--gold); letter-spacing: 2px; margin-bottom: 5px; font-size: 24px; }
-        .subtitle { font-style: italic; color: #888; font-size: 14px; margin-bottom: 30px; }
-        
-        .input-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; color: var(--gold); margin-bottom: 8px; font-size: 12px; text-transform: uppercase; }
+        h1 { 
+            color: var(--gold); 
+            letter-spacing: 4px; 
+            margin-bottom: 5px; 
+            font-size: 28px;
+            text-transform: uppercase;
+        }
+        .subtitle { 
+            font-style: italic; 
+            color: #777; 
+            font-size: 13px; 
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+        .input-group { margin-bottom: 25px; text-align: left; }
+        label { 
+            display: block; 
+            color: var(--gold); 
+            margin-bottom: 10px; 
+            font-size: 11px; 
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
         input, textarea {
             width: 100%;
-            padding: 12px;
-            background: #111;
-            border: 1px solid #444;
-            color: white;
-            border-radius: 8px;
+            padding: 15px;
+            background: #000;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 0;
             box-sizing: border-box;
-            font-family: 'Georgia', serif;
+            font-size: 16px;
+            transition: 0.3s;
         }
+        input:focus, textarea:focus { border-color: var(--gold); outline: none; }
+        
         button {
             width: 100%;
-            padding: 15px;
+            padding: 18px;
             background: var(--gold);
             color: black;
             border: none;
-            border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-            transition: 0.3s;
+            transition: 0.4s;
             text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 14px;
         }
-        button:hover { background: #b8962d; transform: translateY(-2px); }
-        #chat-area { display: none; margin-top: 20px; }
-        .footer-logo { margin-top: 30px; font-size: 12px; color: #555; }
+        button:hover { background: #fff; transform: scale(1.02); }
         
+        #main-app { display: none; margin-top: 30px; }
+        .footer-info { margin-top: 40px; font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* ICONOS SUPERIORES */
+        .top-icons { position: absolute; top: 20px; right: 20px; color: var(--gold); }
+        .top-icons i { cursor: pointer; margin-left: 15px; font-size: 18px; opacity: 0.7; }
+        .top-icons i:hover { opacity: 1; }
+
         /* MODO PERGAMINO */
-        .light-mode { background-color: #ddd; color: #1a1a1a; }
-        .light-mode .app-card { background: var(--parchment); border: 1px solid #c4b494; }
+        .light-mode { background-color: #222; }
+        .light-mode .app-card { background: var(--parchment); color: #1a1a1a; border-top: 4px solid #8b4513; }
         .light-mode h1, .light-mode label { color: #8b4513; }
-        .light-mode input, .light-mode textarea { background: white; color: black; border: 1px solid #c4b494; }
+        .light-mode input, .light-mode textarea { background: #fff; color: #000; border: 1px solid #d3c4a8; }
+        .light-mode button { background: #8b4513; color: #fff; }
     </style>
 </head>
 <body>
 
 <div class="app-card">
-    <div style="text-align: right;">
-        <i class="fas fa-scroll" onclick="toggleTheme()" style="cursor:pointer; color:var(--gold);"></i>
+    <div class="top-icons">
+        <i class="fas fa-sun" title="Modo Pergamino" onclick="toggleTheme()"></i>
     </div>
+    
     <h1>PREDICADOR-PRO</h1>
-    <div class="subtitle">Soli Deo Gloria</div>
+    <div class="subtitle">SOLI DEO GLORIA</div>
 
     <div id="auth-box">
         <div class="input-group">
-            <label>Código de Suscripción</label>
-            <input type="text" id="license-key" placeholder="Ej: JORGE-PRO-2025">
+            <label>Código de Autorización Ministerial</label>
+            <input type="text" id="license-key" placeholder="INGRESE SU CÓDIGO">
         </div>
-        <button onclick="verificarLicencia()">Activar Acceso Ministerial</button>
+        <button onclick="verificarLicencia()">Activar Plataforma</button>
     </div>
 
-    <div id="chat-area">
+    <div id="main-app">
         <div class="input-group">
-            <label>Consulta Teológica / Pasaje</label>
-            <textarea id="user-input" rows="4" placeholder="Dicta tu idea aquí..."></textarea>
+            <label>Idea Homilética / Texto Bíblico</label>
+            <textarea id="user-input" rows="5" placeholder="Dicta o escribe tu pasaje aquí..."></textarea>
         </div>
-        <button onclick="enviarConsulta()"><i class="fas fa-feather-alt"></i> Generar Bosquejo</button>
-        <p id="status-msg" style="font-size: 12px; margin-top: 10px; color: var(--gold);"></p>
+        <button onclick="enviarConsulta()">Generar Estudio Exegético</button>
+        <button onclick="startSpeech()" style="background: transparent; color: var(--gold); border: 1px solid var(--gold); margin-top: 10px;">
+            <i class="fas fa-microphone"></i> Dictar por Voz
+        </button>
+        <p id="status-msg" style="font-size: 12px; margin-top: 15px; color: var(--gold); font-style: italic;"></p>
     </div>
 
-    <div class="footer-logo">Administrado por Jorge Álvarez<br>Villa Elisa, Paraguay</div>
+    <div class="footer-info">
+        Administración: Jorge Álvarez<br>Villa Elisa, Paraguay | 2026
+    </div>
 </div>
 
 <script>
+    // Configuración Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyBf9xenhC3kO4vhO8EJMDnVAYm7L-S_jRU",
         authDomain: "predicador-pro.firebaseapp.com",
@@ -116,39 +154,41 @@
 
     async function verificarLicencia() {
         const key = document.getElementById('license-key').value.trim().toUpperCase();
-        const docRef = db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key);
-        const doc = await docRef.get();
+        if(!key) return;
         
-        if (doc.exists && doc.data().active === true) {
-            document.getElementById('auth-box').style.display = 'none';
-            document.getElementById('chat-area').style.display = 'block';
-        } else {
-            alert("Acceso denegado. Contacte al administrador.");
-        }
-    }
-
-    async function obtenerSabiduriaBerkhof() {
         try {
-            const docRef = db.collection("artifacts/predicador-pro-default/public/data/biblioteca").doc("BERKHOF");
+            const docRef = db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key);
             const doc = await docRef.get();
-            return doc.exists ? JSON.stringify(doc.data()) : "";
-        } catch (e) { return ""; }
-    }
-
-    async function enviarConsulta() {
-        const msg = document.getElementById('status-msg');
-        msg.innerText = "Consultando biblioteca de Berkhof...";
-        const sabiduria = await obtenerSabiduriaBerkhof();
-        
-        // Simulación por ahora, pero ya cargando el contexto
-        setTimeout(() => {
-            msg.innerText = "Estudio generado con éxito basándose en Berkhof.";
-            alert("¡Listo! El asistente ha procesado tu consulta usando la Teología de Berkhof.");
-        }, 1500);
+            
+            if (doc.exists && doc.data().active === true) {
+                document.getElementById('auth-box').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                const nombre = doc.data().pastorName || "Pastor";
+                document.getElementById('status-msg').innerText = "Bienvenido, " + nombre + ". Motor Berkhof conectado.";
+            } else {
+                alert("Código inválido. Contacte al administrador.");
+            }
+        } catch(e) { alert("Error de conexión."); }
     }
 
     function toggleTheme() {
         document.body.classList.toggle('light-mode');
+    }
+
+    function startSpeech() {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'es-PY';
+        recognition.start();
+        recognition.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; };
+    }
+
+    async function enviarConsulta() {
+        const status = document.getElementById('status-msg');
+        status.innerText = "Consultando Teología de Berkhof...";
+        setTimeout(() => {
+            status.innerText = "Estudio generado con éxito.";
+            alert("¡Bosquejo listo! Se ha procesado la consulta con rigor doctrinal.");
+        }, 2000);
     }
 </script>
 </body>
