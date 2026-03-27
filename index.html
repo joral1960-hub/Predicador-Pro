@@ -9,192 +9,128 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --gold: #d4af37;
-            --dark-bg: #121212;
-            --text-color: #e0e0e0;
-            --pastel-bible: #fdf6e3;
+            --gold: #d4af37; --dark-bg: #0a0a0a; --card-bg: #161616;
+            --text: #e0e0e0; --parchment: #f4ecd8;
         }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--dark-bg); color: var(--text); font-family: 'Georgia', serif; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        
+        /* LOGIN */
+        #auth-screen { text-align: center; width: 100%; max-width: 400px; padding: 20px; }
+        .logo { font-size: 28px; color: var(--gold); letter-spacing: 6px; margin-bottom: 30px; text-transform: uppercase; }
 
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: var(--dark-bg);
-            font-family: 'Georgia', serif;
-            color: var(--text-color);
-            display: flex; justify-content: center; align-items: center;
-            overflow: hidden;
-        }
+        /* APP PRINCIPAL */
+        #main-app { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: 0.5s; }
+        .bible-img { font-size: 100px; color: #d3c4a8; margin-bottom: 15px; opacity: 0.8; }
+        
+        .workspace { width: 90%; max-width: 800px; text-align: center; z-index: 10; }
+        .input-box { background: rgba(255,255,255,0.03); border: 1px solid #333; border-radius: 8px; padding: 15px; margin-top: 20px; }
+        textarea { width: 100%; height: 100px; background: transparent; border: none; color: #fff; font-size: 18px; font-family: 'Georgia', serif; resize: none; outline: none; }
+        
+        /* BARRA DE PROGRESO */
+        #progress-container { width: 100%; height: 4px; background: #222; margin: 15px 0; display: none; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: var(--gold); transition: 0.3s; }
 
-        /* Pantalla de Inicio (Login) */
-        #auth-screen {
-            text-align: center;
-            width: 100%; max-width: 400px;
-            padding: 20px;
-        }
+        .btn-gold { background: var(--gold); color: #000; border: none; padding: 15px 40px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
+        .btn-gold:hover { background: #fff; transform: translateY(-2px); }
 
-        .logo-main {
-            font-size: 32px; color: var(--gold);
-            letter-spacing: 5px; margin-bottom: 10px;
-            text-transform: uppercase;
-        }
+        /* RESULTADO (EL PERGAMINO) */
+        #result-display { display: none; margin-top: 20px; padding: 25px; background: #1a1a1a; border-left: 3px solid var(--gold); text-align: left; max-height: 300px; overflow-y: auto; font-style: italic; line-height: 1.6; }
 
-        /* App Principal (Pantalla Completa) */
-        #main-app {
-            display: none;
-            width: 100vw; height: 100vh;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle, #1e1e1e 0%, #0f0f0f 100%);
-        }
-
-        .bible-icon {
-            font-size: 120px;
-            color: #d3c4a8; /* Color pastel suave */
-            margin-bottom: 20px;
-            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.2));
-        }
-
-        .workspace {
-            width: 90%; max-width: 700px;
-            text-align: center;
-        }
-
-        .input-container {
-            position: relative;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 10px;
-            margin-top: 30px;
-        }
-
-        textarea {
-            width: 100%; height: 120px;
-            background: transparent; border: none;
-            color: #fff; font-size: 18px;
-            padding: 15px; box-sizing: border-box;
-            font-family: 'Georgia', serif; resize: none;
-        }
-
-        textarea:focus { outline: none; }
-
-        .controls {
-            display: flex; justify-content: space-between; align-items: center;
-            padding-top: 10px; border-top: 1px solid #222;
-        }
-
-        .btn-action {
-            background: var(--gold); color: #000;
-            border: none; padding: 12px 30px;
-            border-radius: 6px; font-weight: bold;
-            cursor: pointer; text-transform: uppercase;
-            letter-spacing: 1px; transition: 0.3s;
-        }
-
-        .btn-action:hover { background: #fff; transform: translateY(-2px); }
-
-        .mic-icon {
-            font-size: 24px; color: var(--gold);
-            cursor: pointer; padding: 10px;
-            transition: 0.3s;
-        }
-
-        .mic-icon:hover { color: #fff; }
-
-        #status-msg {
-            margin-top: 20px; font-style: italic; color: var(--gold);
-            font-size: 14px; min-height: 20px;
-        }
-
-        input[type="text"] {
-            width: 100%; padding: 15px; margin-bottom: 20px;
-            background: #000; border: 1px solid #333;
-            color: #fff; border-radius: 4px; box-sizing: border-box;
-            text-align: center; font-size: 18px;
-        }
+        /* CONTROLES */
+        .top-nav { position: absolute; top: 30px; right: 40px; display: flex; gap: 20px; color: var(--gold); cursor: pointer; font-size: 20px; }
+        
+        /* MODO PERGAMINO */
+        .light-mode { background: #333 !important; }
+        .light-mode #main-app { background: var(--parchment); color: #2c2c2c; }
+        .light-mode .input-box, .light-mode #result-display { background: #fff; border-color: #d3c4a8; color: #111; }
+        .light-mode textarea { color: #000; }
+        .light-mode .bible-img { color: #8b4513; }
     </style>
 </head>
 <body>
 
     <div id="auth-screen">
-        <div class="logo-main">PREDICADOR-PRO</div>
-        <p style="color: #666; font-size: 12px; letter-spacing: 2px; margin-bottom: 30px;">SOLI DEO GLORIA</p>
-        <input type="text" id="license-key" placeholder="CÓDIGO DE ACCESO">
-        <button class="btn-action" onclick="verificarLicencia()" style="width: 100%;">ENTRAR AL MINISTERIO</button>
+        <div class="logo">PREDICADOR-PRO</div>
+        <input type="text" id="license-key" placeholder="CÓDIGO DE ACCESO" style="width:100%; padding:15px; margin-bottom:20px; background:#000; border:1px solid #333; color:#fff; text-align:center;">
+        <button class="btn-gold" onclick="verificarLicencia()" style="width:100%">ENTRAR AL ESTUDIO</button>
     </div>
 
     <div id="main-app">
-        <div class="workspace">
-            <div class="bible-icon">
-                <i class="fas fa-book-open"></i>
-            </div>
-            <h2 style="font-weight: normal; letter-spacing: 2px; color: #888;">Prepare su Estudio</h2>
+        <div class="top-nav">
+            <i class="fas fa-moon" onclick="setTheme('dark')"></i>
+            <i class="fas fa-scroll" onclick="setTheme('light')"></i>
+        </div>
 
-            <div class="input-container">
-                <textarea id="user-input" placeholder="Dicta o escribe aquí tu pasaje bíblico o idea..."></textarea>
-                <div class="controls">
-                    <i class="fas fa-microphone mic-icon" onclick="startSpeech()" title="Dictar"></i>
-                    <button class="btn-action" onclick="enviarConsulta()">GENERAR ESTUDIO</button>
+        <div class="workspace">
+            <div class="bible-img"><i class="fas fa-book-open"></i></div>
+            <h2 style="font-weight:lighter; letter-spacing:3px;">Laboratorio Homilético</h2>
+            
+            <div class="input-box">
+                <textarea id="user-input" placeholder="Escriba o dicte el pasaje bíblico para el análisis..."></textarea>
+                <div style="display:flex; justify-content: space-between; align-items:center; border-top:1px solid #222; padding-top:10px;">
+                    <i class="fas fa-microphone" style="color:var(--gold); cursor:pointer;" onclick="startSpeech()"></i>
+                    <button class="btn-gold" onclick="generarEstudio()">GENERAR BOSQUEJO</button>
                 </div>
             </div>
-            
-            <p id="status-msg"></p>
-        </div>
-        
-        <div style="position: absolute; bottom: 30px; color: #444; font-size: 11px; letter-spacing: 1px;">
-            ADMINISTRACIÓN JORGE ÁLVAREZ | VILLA ELISA, PY
+
+            <div id="progress-container"><div id="progress-bar"></div></div>
+            <p id="status-msg" style="font-size:12px; color:var(--gold); letter-spacing:1px;"></p>
+
+            <div id="result-display"></div>
         </div>
     </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBf9xenhC3kO4vhO8EJMDnVAYm7L-S_jRU",
-        authDomain: "predicador-pro.firebaseapp.com",
-        projectId: "predicador-pro",
-        storageBucket: "predicador-pro.appspot.com",
-        messagingSenderId: "54203135548",
-        appId: "1:54203135548:web:7f3b832b85a3637e96b8c8"
-    };
+    const firebaseConfig = { apiKey: "AIzaSyBf9xenhC3kO4vhO8EJMDnVAYm7L-S_jRU", authDomain: "predicador-pro.firebaseapp.com", projectId: "predicador-pro", storageBucket: "predicador-pro.appspot.com", messagingSenderId: "54203135548", appId: "1:54203135548:web:7f3b832b85a3637e96b8c8" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     async function verificarLicencia() {
         const key = document.getElementById('license-key').value.trim().toUpperCase();
         if(!key) return;
+        const doc = await db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key).get();
+        if (doc.exists && doc.data().active) {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+        } else { alert("Acceso Denegado"); }
+    }
+
+    function setTheme(mode) {
+        if(mode === 'light') document.body.classList.add('light-mode');
+        else document.body.classList.remove('light-mode');
+    }
+
+    function generarEstudio() {
+        const bar = document.getElementById('progress-bar');
+        const container = document.getElementById('progress-container');
+        const status = document.getElementById('status-msg');
+        const result = document.getElementById('result-display');
+
+        container.style.display = 'block';
+        result.style.display = 'none';
         
-        try {
-            const docRef = db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key);
-            const doc = await docRef.get();
+        let progreso = 0;
+        const pasos = ["Consultando fuentes doctrinales...", "Analizando contexto histórico...", "Estructurando bosquejo hermenéutico...", "Finalizando redacción..."];
+        
+        const intervalo = setInterval(() => {
+            progreso += 25;
+            bar.style.width = progreso + "%";
+            status.innerText = pasos[Math.floor(progreso/26)];
             
-            if (doc.exists && doc.data().active === true) {
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('main-app').style.display = 'flex';
-            } else {
-                alert("Acceso inválido.");
+            if(progreso >= 100) {
+                clearInterval(intervalo);
+                status.innerText = "Estudio completado.";
+                result.style.display = 'block';
+                result.innerHTML = "<strong>BOSQUEJO PRELIMINAR:</strong><br>I. Contexto del pasaje...<br>II. Análisis exegético detallado...<br>III. Aplicación práctica para la congregación.";
+                setTimeout(() => { container.style.display = 'none'; bar.style.width = "0%"; }, 2000);
             }
-        } catch(e) { alert("Error de red."); }
+        }, 800);
     }
 
     function startSpeech() {
         const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        rec.lang = 'es-PY';
-        rec.start();
-        rec.onstart = () => { document.getElementById('status-msg').innerText = "Escuchando su voz..."; };
-        rec.onresult = (e) => { 
-            document.getElementById('user-input').value = e.results[0][0].transcript;
-            document.getElementById('status-msg').innerText = "";
-        };
-    }
-
-    async function enviarConsulta() {
-        const status = document.getElementById('status-msg');
-        status.innerText = "Consultando fuentes y referencias doctrinales...";
-        
-        // Simulación de proceso para asegurar que el mensaje se vea antes del resultado
-        setTimeout(() => {
-            alert("Estudio Bíblico procesado con éxito.");
-            status.innerText = "";
-        }, 2000);
+        rec.lang = 'es-PY'; rec.start();
+        rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; };
     }
 </script>
 </body>
