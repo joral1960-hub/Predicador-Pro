@@ -8,75 +8,70 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --gold: #d4af37; --dark-bg: #0a0a0a; --card-bg: #161616;
-            --text: #e0e0e0; --parchment: #f4ecd8;
-        }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--dark-bg); color: var(--text); font-family: 'Georgia', serif; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        :root { --gold: #d4af37; --bg: #0f0f0f; --card: #1a1a1a; --text: #f0f0f0; --parchment: #f4ecd8; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: 'Georgia', serif; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         
-        /* LOGIN */
         #auth-screen { text-align: center; width: 100%; max-width: 400px; padding: 20px; }
-        .logo { font-size: 28px; color: var(--gold); letter-spacing: 6px; margin-bottom: 30px; text-transform: uppercase; }
+        .logo-title { font-size: 28px; color: var(--gold); letter-spacing: 5px; margin-bottom: 30px; text-transform: uppercase; }
 
-        /* APP PRINCIPAL */
-        #main-app { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: 0.5s; }
-        .bible-img { font-size: 100px; color: #d3c4a8; margin-bottom: 15px; opacity: 0.8; }
+        #main-app { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle, #1e1e1e 0%, #0a0a0a 100%); }
+        .bible-icon { font-size: 110px; color: #d3c4a8; margin-bottom: 20px; filter: drop-shadow(0 0 15px rgba(212,175,55,0.2)); }
         
-        .workspace { width: 90%; max-width: 800px; text-align: center; z-index: 10; }
-        .input-box { background: rgba(255,255,255,0.03); border: 1px solid #333; border-radius: 8px; padding: 15px; margin-top: 20px; }
-        textarea { width: 100%; height: 100px; background: transparent; border: none; color: #fff; font-size: 18px; font-family: 'Georgia', serif; resize: none; outline: none; }
+        .workspace { width: 90%; max-width: 800px; text-align: center; }
+        .input-area { background: rgba(255,255,255,0.03); border: 1px solid #333; border-radius: 8px; padding: 15px; margin-top: 20px; }
+        textarea { width: 100%; height: 110px; background: transparent; border: none; color: #fff; font-size: 18px; font-family: 'Georgia', serif; resize: none; outline: none; }
         
-        /* BARRA DE PROGRESO */
-        #progress-container { width: 100%; height: 4px; background: #222; margin: 15px 0; display: none; overflow: hidden; }
-        #progress-bar { width: 0%; height: 100%; background: var(--gold); transition: 0.3s; }
+        #progress-bar-container { width: 100%; height: 3px; background: #222; margin: 15px 0; display: none; }
+        #progress-bar { width: 0%; height: 100%; background: var(--gold); transition: 0.4s; }
 
-        .btn-gold { background: var(--gold); color: #000; border: none; padding: 15px 40px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
+        .btn-gold { background: var(--gold); color: #000; border: none; padding: 15px 45px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
         .btn-gold:hover { background: #fff; transform: translateY(-2px); }
 
-        /* RESULTADO (EL PERGAMINO) */
-        #result-display { display: none; margin-top: 20px; padding: 25px; background: #1a1a1a; border-left: 3px solid var(--gold); text-align: left; max-height: 300px; overflow-y: auto; font-style: italic; line-height: 1.6; }
+        #output-scroll { display: none; margin-top: 25px; padding: 30px; background: #161616; border-left: 3px solid var(--gold); text-align: left; max-height: 350px; overflow-y: auto; font-style: italic; line-height: 1.8; border-radius: 0 8px 8px 0; box-shadow: inset 0 0 20px #000; }
 
-        /* CONTROLES */
-        .top-nav { position: absolute; top: 30px; right: 40px; display: flex; gap: 20px; color: var(--gold); cursor: pointer; font-size: 20px; }
+        .nav-tools { position: absolute; top: 30px; right: 40px; display: flex; gap: 25px; color: var(--gold); font-size: 22px; cursor: pointer; }
         
-        /* MODO PERGAMINO */
-        .light-mode { background: #333 !important; }
         .light-mode #main-app { background: var(--parchment); color: #2c2c2c; }
-        .light-mode .input-box, .light-mode #result-display { background: #fff; border-color: #d3c4a8; color: #111; }
+        .light-mode .input-area, .light-mode #output-scroll { background: #fff; border-color: #d3c4a8; color: #111; }
         .light-mode textarea { color: #000; }
-        .light-mode .bible-img { color: #8b4513; }
+        .light-mode .bible-icon { color: #8b4513; }
     </style>
 </head>
 <body>
 
     <div id="auth-screen">
-        <div class="logo">PREDICADOR-PRO</div>
-        <input type="text" id="license-key" placeholder="CÓDIGO DE ACCESO" style="width:100%; padding:15px; margin-bottom:20px; background:#000; border:1px solid #333; color:#fff; text-align:center;">
-        <button class="btn-gold" onclick="verificarLicencia()" style="width:100%">ENTRAR AL ESTUDIO</button>
+        <div class="logo-title">PREDICADOR-PRO</div>
+        <input type="text" id="license-key" placeholder="CÓDIGO DE ACCESO" style="width:100%; padding:15px; margin-bottom:20px; background:#000; border:1px solid #333; color:#fff; text-align:center; font-size: 18px;">
+        <button class="btn-gold" onclick="verificarLicencia()" style="width:100%">ACTIVAR MINISTERIO</button>
     </div>
 
     <div id="main-app">
-        <div class="top-nav">
-            <i class="fas fa-moon" onclick="setTheme('dark')"></i>
-            <i class="fas fa-scroll" onclick="setTheme('light')"></i>
+        <div class="nav-tools">
+            <i class="fas fa-moon" title="Modo Oscuro" onclick="setTheme('dark')"></i>
+            <i class="fas fa-scroll" title="Modo Pergamino" onclick="setTheme('light')"></i>
         </div>
 
         <div class="workspace">
-            <div class="bible-img"><i class="fas fa-book-open"></i></div>
-            <h2 style="font-weight:lighter; letter-spacing:3px;">Laboratorio Homilético</h2>
+            <div class="bible-icon"><i class="fas fa-book-open"></i></div>
+            <h2 style="font-weight:lighter; letter-spacing:4px; margin-bottom: 5px;">ESTUDIO EXEGÉTICO</h2>
+            <p style="font-size: 11px; color: #666; letter-spacing: 2px; text-transform: uppercase;">Soli Deo Gloria</p>
             
-            <div class="input-box">
-                <textarea id="user-input" placeholder="Escriba o dicte el pasaje bíblico para el análisis..."></textarea>
-                <div style="display:flex; justify-content: space-between; align-items:center; border-top:1px solid #222; padding-top:10px;">
-                    <i class="fas fa-microphone" style="color:var(--gold); cursor:pointer;" onclick="startSpeech()"></i>
-                    <button class="btn-gold" onclick="generarEstudio()">GENERAR BOSQUEJO</button>
+            <div class="input-area">
+                <textarea id="user-input" placeholder="Dicta o escribe el pasaje o tema doctrinal aquí..."></textarea>
+                <div style="display:flex; justify-content: space-between; align-items:center; border-top:1px solid #222; padding-top:12px;">
+                    <i class="fas fa-microphone" style="color:var(--gold); cursor:pointer; font-size: 20px;" onclick="startSpeech()"></i>
+                    <button class="btn-gold" onclick="ejecutarIA()">GENERAR BOSQUEJO</button>
                 </div>
             </div>
 
-            <div id="progress-container"><div id="progress-bar"></div></div>
-            <p id="status-msg" style="font-size:12px; color:var(--gold); letter-spacing:1px;"></p>
+            <div id="progress-bar-container"><div id="progress-bar"></div></div>
+            <p id="status-text" style="font-size:12px; color:var(--gold); font-style: italic; margin-top: 10px;"></p>
 
-            <div id="result-display"></div>
+            <div id="output-scroll"></div>
+        </div>
+        
+        <div style="position: absolute; bottom: 30px; font-size: 10px; color: #444; letter-spacing: 1px;">
+            DISEÑO Y ADMINISTRACIÓN: JORGE ÁLVAREZ | VILLA ELISA, PY
         </div>
     </div>
 
@@ -85,6 +80,11 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    const SYSTEM_PROMPT = `Eres PREDICADOR-PRO, un asistente teológico reformado de alto nivel académico. 
+    Tu marco doctrinal es la Confesión de Fe de Londres de 1689. 
+    Instrucciones: Provee bosquejos exegéticos profundos, analizando el contexto histórico y el griego/hebreo original. 
+    Usa un lenguaje solemne y profesional.`;
+
     async function verificarLicencia() {
         const key = document.getElementById('license-key').value.trim().toUpperCase();
         if(!key) return;
@@ -92,7 +92,7 @@
         if (doc.exists && doc.data().active) {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('main-app').style.display = 'flex';
-        } else { alert("Acceso Denegado"); }
+        } else { alert("Acceso Denegado. Consulte al Administrador."); }
     }
 
     function setTheme(mode) {
@@ -100,31 +100,35 @@
         else document.body.classList.remove('light-mode');
     }
 
-    function generarEstudio() {
+    async function ejecutarIA() {
         const bar = document.getElementById('progress-bar');
-        const container = document.getElementById('progress-container');
-        const status = document.getElementById('status-msg');
-        const result = document.getElementById('result-display');
+        const container = document.getElementById('progress-bar-container');
+        const status = document.getElementById('status-text');
+        const output = document.getElementById('output-scroll');
+        const query = document.getElementById('user-input').value;
+
+        if(!query) return;
 
         container.style.display = 'block';
-        result.style.display = 'none';
+        output.style.display = 'none';
         
-        let progreso = 0;
-        const pasos = ["Consultando fuentes doctrinales...", "Analizando contexto histórico...", "Estructurando bosquejo hermenéutico...", "Finalizando redacción..."];
+        let p = 0;
+        const msgs = ["Consultando Biblioteca de Berkhof...", "Analizando exégesis bíblica...", "Estructurando bajo la Confesión de 1689...", "Redactando bosquejo final..."];
         
-        const intervalo = setInterval(() => {
-            progreso += 25;
-            bar.style.width = progreso + "%";
-            status.innerText = pasos[Math.floor(progreso/26)];
+        const interval = setInterval(() => {
+            p += 2;
+            bar.style.width = p + "%";
+            status.innerText = msgs[Math.floor(p/26)] || "Finalizando...";
             
-            if(progreso >= 100) {
-                clearInterval(intervalo);
-                status.innerText = "Estudio completado.";
-                result.style.display = 'block';
-                result.innerHTML = "<strong>BOSQUEJO PRELIMINAR:</strong><br>I. Contexto del pasaje...<br>II. Análisis exegético detallado...<br>III. Aplicación práctica para la congregación.";
-                setTimeout(() => { container.style.display = 'none'; bar.style.width = "0%"; }, 2000);
+            if(p >= 100) {
+                clearInterval(interval);
+                status.innerText = "Análisis completado.";
+                container.style.display = 'none';
+                output.style.display = 'block';
+                // AQUÍ SE MOSTRARÁ EL RESULTADO REAL BASADO EN EL PROMPT
+                output.innerHTML = `<strong>RESULTADO TEOLÓGICO:</strong><br><br>Basado en el rigor exegético solicitado para "${query}", se ha estructurado un análisis profundo que integra la doctrina de la soberanía divina y el contexto histórico gramatical. <br><br> [El contenido completo aparecerá aquí al conectar la API Key]`;
             }
-        }, 800);
+        }, 100);
     }
 
     function startSpeech() {
