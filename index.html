@@ -3,144 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PREDICADOR-PRO | Acceso Ministerial</title>
+    <title>PREDICADOR-PRO | Soli Deo Gloria</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap');
+
         :root {
             --gold: #d4af37;
-            --dark-bg: #121212;
-            --card-bg: #1e1e1e;
-            --text-main: #f0f0f0;
-            --parchment: #f4ecd8;
+            --dark-bg: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text-color: #e0e0e0;
+            --accent-gold: #f1d592;
         }
-        body { 
-            font-family: 'Georgia', serif; 
-            background-color: var(--dark-bg); 
-            color: var(--text-main); 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            font-family: 'Fauna One', serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
         }
-        .app-card {
+
+        .container {
+            width: 90%;
+            max-width: 500px;
             background: var(--card-bg);
-            width: 95%;
-            max-width: 600px;
-            padding: 50px 40px;
-            border-radius: 4px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            border-top: 4px solid var(--gold);
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+            border: 1px solid #2a2a2a;
             text-align: center;
             position: relative;
         }
-        h1 { 
-            color: var(--gold); 
-            letter-spacing: 4px; 
-            margin-bottom: 5px; 
-            font-size: 28px;
+
+        .header-line {
+            width: 60px;
+            height: 2px;
+            background: var(--gold);
+            margin: 10px auto 30px;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            margin: 0;
+            letter-spacing: 3px;
+            font-size: 26px;
+        }
+
+        .subtitle {
+            font-size: 10px;
+            letter-spacing: 4px;
+            color: #666;
+            margin-bottom: 30px;
             text-transform: uppercase;
         }
-        .subtitle { 
-            font-style: italic; 
-            color: #777; 
-            font-size: 13px; 
-            margin-bottom: 40px;
-            letter-spacing: 2px;
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 25px;
         }
-        .input-group { margin-bottom: 25px; text-align: left; }
-        label { 
-            display: block; 
-            color: var(--gold); 
-            margin-bottom: 10px; 
-            font-size: 11px; 
+
+        label {
+            font-size: 11px;
+            color: var(--gold);
             text-transform: uppercase;
-            font-weight: bold;
             letter-spacing: 1px;
+            display: block;
+            margin-bottom: 8px;
         }
+
         input, textarea {
             width: 100%;
-            padding: 15px;
-            background: #000;
+            background: #111;
             border: 1px solid #333;
-            color: #fff;
-            border-radius: 0;
+            color: white;
+            padding: 15px;
             box-sizing: border-box;
-            font-size: 16px;
+            border-radius: 4px;
+            font-family: 'Fauna One', serif;
+            font-size: 15px;
             transition: 0.3s;
         }
-        input:focus, textarea:focus { border-color: var(--gold); outline: none; }
-        
-        button {
-            width: 100%;
-            padding: 18px;
-            background: var(--gold);
+
+        input:focus, textarea:focus {
+            border-color: var(--gold);
+            outline: none;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #d4af37 0%, #b8962d 100%);
             color: black;
             border: none;
+            padding: 18px;
+            width: 100%;
             font-weight: bold;
-            cursor: pointer;
-            transition: 0.4s;
             text-transform: uppercase;
             letter-spacing: 2px;
-            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.3s;
+            margin-top: 10px;
         }
-        button:hover { background: #fff; transform: scale(1.02); }
-        
-        #main-app { display: none; margin-top: 30px; }
-        .footer-info { margin-top: 40px; font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* ICONOS SUPERIORES */
-        .top-icons { position: absolute; top: 20px; right: 20px; color: var(--gold); }
-        .top-icons i { cursor: pointer; margin-left: 15px; font-size: 18px; opacity: 0.7; }
-        .top-icons i:hover { opacity: 1; }
+
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+            background: linear-gradient(135deg, #f1d592 0%, #d4af37 100%);
+        }
+
+        #main-app { display: none; }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 10px;
+            color: #444;
+            letter-spacing: 1px;
+        }
 
         /* MODO PERGAMINO */
         .light-mode { background-color: #222; }
-        .light-mode .app-card { background: var(--parchment); color: #1a1a1a; border-top: 4px solid #8b4513; }
-        .light-mode h1, .light-mode label { color: #8b4513; }
-        .light-mode input, .light-mode textarea { background: #fff; color: #000; border: 1px solid #d3c4a8; }
-        .light-mode button { background: #8b4513; color: #fff; }
+        .light-mode .container { background: #f4ecd8; border-color: #d3c4a8; }
+        .light-mode h1, .light-mode label { color: #5d4037; }
+        .light-mode input, .light-mode textarea { background: #fff; color: #333; border-color: #d3c4a8; }
+        .light-mode .btn-gold { background: #5d4037; color: #fff; }
+
+        .top-right { position: absolute; top: 20px; right: 20px; }
+        .top-right i { color: var(--gold); cursor: pointer; opacity: 0.6; transition: 0.3s; }
+        .top-right i:hover { opacity: 1; }
     </style>
 </head>
 <body>
 
-<div class="app-card">
-    <div class="top-icons">
-        <i class="fas fa-sun" title="Modo Pergamino" onclick="toggleTheme()"></i>
+<div class="container">
+    <div class="top-right">
+        <i class="fas fa-scroll" onclick="toggleTheme()"></i>
     </div>
-    
     <h1>PREDICADOR-PRO</h1>
-    <div class="subtitle">SOLI DEO GLORIA</div>
+    <div class="header-line"></div>
+    <div class="subtitle">Soli Deo Gloria</div>
 
     <div id="auth-box">
         <div class="input-group">
-            <label>Código de Autorización Ministerial</label>
-            <input type="text" id="license-key" placeholder="INGRESE SU CÓDIGO">
+            <label>Código de Acceso Ministerial</label>
+            <input type="text" id="license-key" placeholder="••••••••••••">
         </div>
-        <button onclick="verificarLicencia()">Activar Plataforma</button>
+        <button class="btn-gold" onclick="verificarLicencia()">Activar Plataforma</button>
     </div>
 
     <div id="main-app">
         <div class="input-group">
-            <label>Idea Homilética / Texto Bíblico</label>
-            <textarea id="user-input" rows="5" placeholder="Dicta o escribe tu pasaje aquí..."></textarea>
+            <label>Consulta o Pasaje Bíblico</label>
+            <textarea id="user-input" rows="5" placeholder="Dicta tu bosquejo aquí..."></textarea>
         </div>
-        <button onclick="enviarConsulta()">Generar Estudio Exegético</button>
-        <button onclick="startSpeech()" style="background: transparent; color: var(--gold); border: 1px solid var(--gold); margin-top: 10px;">
-            <i class="fas fa-microphone"></i> Dictar por Voz
+        <button class="btn-gold" onclick="enviarConsulta()">Generar Estudio</button>
+        <button onclick="startSpeech()" style="background:none; border:none; color:var(--gold); cursor:pointer; margin-top:15px; font-size:12px; text-transform:uppercase;">
+            <i class="fas fa-microphone"></i> Activar Micrófono
         </button>
-        <p id="status-msg" style="font-size: 12px; margin-top: 15px; color: var(--gold); font-style: italic;"></p>
     </div>
 
-    <div class="footer-info">
-        Administración: Jorge Álvarez<br>Villa Elisa, Paraguay | 2026
+    <div class="footer">
+        Administración: Jorge Álvarez<br>Villa Elisa, Paraguay
     </div>
 </div>
 
 <script>
-    // Configuración Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyBf9xenhC3kO4vhO8EJMDnVAYm7L-S_jRU",
         authDomain: "predicador-pro.firebaseapp.com",
@@ -155,40 +189,27 @@
     async function verificarLicencia() {
         const key = document.getElementById('license-key').value.trim().toUpperCase();
         if(!key) return;
-        
-        try {
-            const docRef = db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key);
-            const doc = await docRef.get();
-            
-            if (doc.exists && doc.data().active === true) {
-                document.getElementById('auth-box').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-                const nombre = doc.data().pastorName || "Pastor";
-                document.getElementById('status-msg').innerText = "Bienvenido, " + nombre + ". Motor Berkhof conectado.";
-            } else {
-                alert("Código inválido. Contacte al administrador.");
-            }
-        } catch(e) { alert("Error de conexión."); }
+        const docRef = db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key);
+        const doc = await docRef.get();
+        if (doc.exists && doc.data().active === true) {
+            document.getElementById('auth-box').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+        } else {
+            alert("Acceso no autorizado.");
+        }
     }
 
-    function toggleTheme() {
-        document.body.classList.toggle('light-mode');
-    }
-
+    function toggleTheme() { document.body.classList.toggle('light-mode'); }
+    
     function startSpeech() {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'es-PY';
-        recognition.start();
-        recognition.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; };
+        const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        rec.lang = 'es-PY';
+        rec.start();
+        rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; };
     }
 
     async function enviarConsulta() {
-        const status = document.getElementById('status-msg');
-        status.innerText = "Consultando Teología de Berkhof...";
-        setTimeout(() => {
-            status.innerText = "Estudio generado con éxito.";
-            alert("¡Bosquejo listo! Se ha procesado la consulta con rigor doctrinal.");
-        }, 2000);
+        alert("Consultando base doctrinal... (Procesando)");
     }
 </script>
 </body>
