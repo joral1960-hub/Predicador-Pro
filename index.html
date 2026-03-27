@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PREDICADOR-PRO | Soli Deo Gloria</title>
+    <title>PREDICADOR-PRO | Diagnóstico</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -15,38 +15,25 @@
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         
-        const firebaseConfig = {
-          apiKey: "AIzaSyBf9xen4C3kO4vh08EJMDnVAym7l-S_jRU", 
+        const config = {
+          apiKey: "AIzaSyC3tAC8y7E1SfnTWi08fwq7gMXP_mnmpfw", 
           authDomain: "predicador-pro.firebaseapp.com",
           projectId: "predicador-pro",
-          storageBucket: "predicador-pro.firebasestorage.app",
-          messagingSenderId: "145970938733",
           appId: "1:145970938733:web:357aa4d0523d2892891064"
         };
-
-        const app = initializeApp(firebaseConfig);
-        window.PredicadorDB = {
-            db: getFirestore(app),
-            auth: getAuth(app),
-            doc, getDoc, signInAnonymously,
-            ready: true
-        };
+        const app = initializeApp(config);
+        window.PredicadorDB = { db: getFirestore(app), auth: getAuth(app), doc, getDoc, signInAnonymously, ready: true };
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Crimson+Pro:wght@400;600&display=swap');
-        body { font-family: 'Inter', sans-serif; transition: 0.3s; margin: 0; }
-        .dark-mode { background-color: #0f0f12; color: #f8fafc; }
-        .light-mode { background-color: #f1f5f9; color: #1e293b; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Crimson+Pro:wght@400;600&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f0f12; color: #f8fafc; margin: 0; }
         .theological-text { font-family: 'Crimson Pro', serif; font-size: 1.25rem; line-height: 1.8; }
-        .glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-        .dark-mode .card { background-color: #1a1a20; border-color: #334155; }
-        .light-mode .card { background-color: #ffffff; border-color: #e2e8f0; color: #1e293b; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .card { background-color: #1a1a20; border: 1px solid #334155; }
     </style>
 </head>
-<body id="app-body" class="dark-mode">
+<body>
     <div id="root"></div>
-
     <script type="text/babel">
         const { useState, useEffect } = React;
 
@@ -54,48 +41,32 @@
             const [isLoggedIn, setIsLoggedIn] = useState(false);
             const [license, setLicense] = useState(localStorage.getItem('predicador_license') || '');
             const [apiKey, setApiKey] = useState(null);
-            const [status, setStatus] = useState('');
             const [messages, setMessages] = useState([]);
             const [input, setInput] = useState('');
             const [loading, setLoading] = useState(false);
-            const [theme, setTheme] = useState('dark');
-
-            const toggleTheme = () => {
-                const newTheme = theme === 'dark' ? 'light' : 'dark';
-                setTheme(newTheme);
-                document.getElementById('app-body').className = newTheme === 'dark' ? 'dark-mode' : 'light-mode';
-            };
 
             const handleLogin = async () => {
                 if (!license) return;
-                setStatus('Validando credenciales...');
                 try {
-                    if (!window.PredicadorDB?.ready) throw new Error("Esperando al servidor...");
-                    
                     await window.PredicadorDB.signInAnonymously(window.PredicadorDB.auth);
                     const { db, doc, getDoc } = window.PredicadorDB;
-                    
-                    // RUTA MAESTRA: artifacts/predicador-pro-default/public/data/licenses/CODIGO
                     const docRef = doc(db, 'artifacts', 'predicador-pro-default', 'public', 'data', 'licenses', license.trim().toUpperCase());
                     const snap = await getDoc(docRef);
-
                     if (snap.exists() && snap.data().active) {
-                        setApiKey(snap.data().apiKey || snap.data().apikey);
+                        // Buscamos apiKey o apikey para evitar errores de escritura
+                        const key = snap.data().apiKey || snap.data().apikey;
+                        setApiKey(key);
                         setIsLoggedIn(true);
                         localStorage.setItem('predicador_license', license.toUpperCase());
-                        setStatus('');
-                    } else {
-                        setStatus('Código no encontrado o inactivo.');
-                    }
-                } catch (err) {
-                    setStatus(`Error: ${err.message}`);
-                }
+                    } else { alert("Licencia no válida"); }
+                } catch (err) { alert("Error Firebase: " + err.message); }
             };
+
+            useEffect(() => { if (license) handleLogin(); }, []);
 
             const handleSend = async () => {
                 if (!input.trim() || loading) return;
-                const userMsg = { role: 'user', content: input };
-                setMessages([...messages, userMsg]);
+                setMessages(prev => [...prev, { role: 'user', content: input }]);
                 setInput('');
                 setLoading(true);
 
@@ -103,31 +74,29 @@
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: "Eres PREDICADOR-PRO, un asistente teológico reformado. Responde con profundidad y basándote en la Confesión de 1689. \n\nConsulta: " + input }] }] })
+                        body: JSON.stringify({ contents: [{ parts: [{ text: "Analiza teológicamente: " + input }] }] })
                     });
                     const data = await res.json();
+                    
+                    if (data.error) {
+                        throw new Error(`Código ${data.error.code}: ${data.error.message}`);
+                    }
+                    
                     const text = data.candidates[0].content.parts[0].text;
                     setMessages(prev => [...prev, { role: 'assistant', content: text }]);
                 } catch (e) {
-                    setMessages(prev => [...prev, { role: 'assistant', content: "Error al conectar con el motor de sabiduría. Revisa tu llave API." }]);
+                    setMessages(prev => [...prev, { role: 'assistant', content: "⚠️ ERROR DE GOOGLE: " + e.message }]);
                 } finally { setLoading(false); }
             };
 
             if (!isLoggedIn) {
                 return (
-                    <div className="flex items-center justify-center h-screen p-6">
-                        <div className="card max-w-md w-full p-10 rounded-[2.5rem] border text-center shadow-2xl bg-[#16161a]">
-                            <i className="fas fa-lock text-4xl text-lime-500 mb-6"></i>
-                            <h2 className="text-xl font-bold mb-6 uppercase tracking-widest">Acceso Ministerial</h2>
-                            <input 
-                                type="text" 
-                                value={license} 
-                                onChange={(e) => setLicense(e.target.value)} 
-                                placeholder="CÓDIGO (Ej: GUIDO-PRO-2026)" 
-                                className="w-full bg-black border border-slate-700 rounded-xl p-4 text-center text-white mb-4 outline-none focus:border-lime-500"
-                            />
-                            <button onClick={handleLogin} className="w-full bg-lime-500 text-black font-bold py-4 rounded-xl hover:bg-lime-400 uppercase tracking-widest">Activar</button>
-                            <p className="mt-4 text-xs text-slate-500 italic">{status}</p>
+                    <div className="flex items-center justify-center h-screen">
+                        <div className="card p-10 rounded-[2rem] text-center max-w-md w-full">
+                            <i className="fas fa-key text-lime-500 text-4xl mb-4"></i>
+                            <h2 className="text-xl font-bold mb-6 tracking-widest uppercase">Validación Pro</h2>
+                            <input type="text" value={license} onChange={(e) => setLicense(e.target.value)} placeholder="CÓDIGO" className="w-full bg-black border border-slate-700 rounded-xl p-4 text-center text-white mb-4 outline-none focus:border-lime-500" />
+                            <button onClick={handleLogin} className="w-full bg-lime-500 text-black font-bold py-4 rounded-xl hover:bg-lime-400 uppercase">Entrar</button>
                         </div>
                     </div>
                 );
@@ -135,55 +104,32 @@
 
             return (
                 <div className="flex flex-col h-screen max-w-4xl mx-auto border-x border-slate-800">
-                    <header className="flex items-center justify-between px-8 py-5 border-b border-slate-800 glass sticky top-0 z-10">
+                    <header className="flex items-center justify-between px-8 py-5 border-b border-slate-800 bg-black/40 backdrop-blur-md">
                         <div className="flex items-center gap-3">
-                            <i className="fas fa-shield-halved text-lime-500 text-xl"></i>
-                            <div>
-                                <h1 className="text-lg font-bold leading-none">PREDICADOR-PRO</h1>
-                                <p className="text-[9px] tracking-[0.2em] text-slate-500 font-bold uppercase">Soli Deo Gloria</p>
-                            </div>
+                            <i className="fas fa-shield-check text-lime-500"></i>
+                            <h1 className="font-bold">PREDICADOR-PRO</h1>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <button onClick={toggleTheme} className="text-slate-400 hover:text-lime-500 text-xl transition-colors">
-                                <i className={`fas ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`}></i>
-                            </button>
-                            <div className="bg-lime-500 text-black text-[10px] font-black px-3 py-1 rounded-full">MODO PRO</div>
-                        </div>
+                        <div className="bg-lime-500 text-black text-[10px] font-black px-3 py-1 rounded-full uppercase">Conectado</div>
                     </header>
-
                     <main className="flex-1 overflow-y-auto p-6 md:p-10 space-y-8">
-                        {messages.length === 0 && (
-                            <div className="h-full flex flex-col items-center justify-center opacity-10 text-center">
-                                <i className="fas fa-book-open text-7xl mb-4"></i>
-                                <h2 className="text-3xl font-bold italic">Estudio Teológico</h2>
-                                <p>"Escudriñad las Escrituras..."</p>
-                            </div>
-                        )}
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`p-6 rounded-[1.5rem] max-w-[90%] border ${msg.role === 'user' ? 'bg-lime-500 text-black border-lime-400' : 'card'}`}>
+                                <div className={`p-6 rounded-[1.5rem] max-w-[90%] border ${msg.role === 'user' ? 'bg-lime-500 text-black font-bold border-lime-400' : 'card'}`}>
                                     <div className="theological-text whitespace-pre-wrap">{msg.content}</div>
                                 </div>
                             </div>
                         ))}
-                        {loading && <div className="text-lime-500 animate-pulse text-xs font-bold tracking-widest"><i className="fas fa-spinner fa-spin mr-2"></i>ANALIZANDO...</div>}
+                        {loading && <div className="text-lime-500 animate-pulse text-xs font-bold tracking-widest"><i className="fas fa-spinner fa-spin mr-2"></i>ESTUDIANDO...</div>}
                     </main>
-
                     <footer className="p-6 border-t border-slate-800">
-                        <div className="flex gap-3 bg-black/40 border border-slate-700 rounded-2xl p-2 items-center">
-                            <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Pasaje o tema..." className="flex-1 bg-transparent border-none p-3 outline-none text-white resize-none" rows="1" />
-                            <button onClick={() => {
-                                const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                                rec.lang = 'es-PY'; rec.start();
-                                rec.onresult = (e) => setInput(e.results[0][0].transcript);
-                            }} className="text-slate-500 hover:text-lime-500 p-2"><i className="fas fa-microphone text-xl"></i></button>
-                            <button onClick={handleSend} className="bg-lime-500 text-black p-4 rounded-xl hover:scale-105 transition-transform"><i className="fas fa-paper-plane"></i></button>
+                        <div className="flex gap-4 items-center bg-black/40 border border-slate-700 rounded-[2rem] p-2 pl-6">
+                            <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Pasaje..." className="flex-1 bg-transparent text-white border-none p-3 outline-none resize-none" rows="1" onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} />
+                            <button onClick={handleSend} className="bg-lime-500 text-black p-5 rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg"><i className="fas fa-paper-plane"></i></button>
                         </div>
                     </footer>
                 </div>
             );
         };
-
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
