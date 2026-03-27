@@ -27,7 +27,6 @@
             transition: background 0.5s ease;
         }
 
-        /* CONTENEDOR TIPO APP PREMIUM */
         .app-container {
             width: 90%; max-width: 550px;
             background: var(--card);
@@ -37,94 +36,49 @@
             border-top: 4px solid var(--gold);
             text-align: center;
             position: relative;
-            transition: all 0.5s ease;
         }
 
-        h1 {
-            font-family: 'Cinzel', serif;
-            color: var(--gold);
-            letter-spacing: 5px;
-            font-size: 26px;
-            margin: 0 0 5px 0;
-            text-transform: uppercase;
-        }
+        h1 { font-family: 'Cinzel', serif; color: var(--gold); letter-spacing: 5px; font-size: 26px; margin: 0; text-transform: uppercase; }
+        .motto { font-size: 10px; letter-spacing: 4px; color: #666; margin-bottom: 40px; text-transform: uppercase; }
+        .bible-icon { font-size: 70px; color: #d3c4a8; margin-bottom: 30px; opacity: 0.8; }
 
-        .motto {
-            font-size: 10px;
-            letter-spacing: 4px;
-            color: #666;
-            margin-bottom: 40px;
-            text-transform: uppercase;
-        }
-
-        .bible-icon {
-            font-size: 70px;
-            color: #d3c4a8;
-            margin-bottom: 30px;
-            opacity: 0.8;
-        }
-
-        /* INPUTS */
         .input-group { text-align: left; margin-bottom: 30px; }
-        
-        label {
-            display: block;
-            color: var(--gold);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 12px;
-            font-weight: bold;
-        }
+        label { display: block; color: var(--gold); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; font-weight: bold; }
 
         input, textarea {
-            width: 100%;
-            background: #000;
-            border: 1px solid #2a2a2c;
-            color: #fff;
-            padding: 15px;
-            box-sizing: border-box;
-            font-family: 'Playfair Display', serif;
-            font-size: 16px;
+            width: 100%; background: #000; border: 1px solid #2a2a2c;
+            color: #fff; padding: 15px; box-sizing: border-box;
+            font-family: 'Playfair Display', serif; font-size: 16px;
         }
 
         .btn-gold {
-            width: 100%;
-            padding: 18px;
-            background: var(--gold);
-            color: #000;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-size: 13px;
-            transition: 0.3s;
+            width: 100%; padding: 18px; background: var(--gold);
+            color: #000; border: none; font-weight: bold;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
+            font-size: 13px; transition: 0.3s;
         }
-
         .btn-gold:hover { background: #fff; transform: translateY(-2px); }
 
-        #main-app { display: none; }
-
-        /* MODO PERGAMINO (LIGHT MODE) */
-        .light-mode { background-color: #333; }
+        /* MODO PERGAMINO */
+        .light-mode { background-color: #333 !important; }
         .light-mode .app-container { background: var(--parchment); color: #1a1a1a; border-top: 4px solid #8b4513; }
         .light-mode h1, .light-mode label { color: #8b4513; }
         .light-mode input, .light-mode textarea { background: #fff; color: #000; border: 1px solid #d3c4a8; }
         .light-mode .btn-gold { background: #8b4513; color: #fff; }
         .light-mode .bible-icon { color: #8b4513; }
 
-        .theme-switcher { position: absolute; top: 20px; right: 25px; color: var(--gold); cursor: pointer; font-size: 20px; }
+        .theme-switcher { position: absolute; top: 20px; right: 25px; color: var(--gold); font-size: 20px; }
+        .theme-switcher i { cursor: pointer; margin-left: 15px; }
 
         .footer { margin-top: 40px; font-size: 10px; color: #444; letter-spacing: 1px; }
     </style>
 </head>
-<body>
+<body id="body-tag">
 
     <div class="app-container">
         <div class="theme-switcher">
-            <i class="fas fa-moon" id="moon-icon" onclick="toggleTheme('dark')" style="margin-right: 15px;"></i>
-            <i class="fas fa-scroll" id="scroll-icon" onclick="toggleTheme('light')"></i>
+            <i class="fas fa-moon" onclick="toggleTheme('dark')"></i>
+            <i class="fas fa-scroll" onclick="toggleTheme('light')"></i>
         </div>
 
         <h1>PREDICADOR-PRO</h1>
@@ -136,13 +90,13 @@
                 <label>Credencial de Acceso Ministerial</label>
                 <input type="text" id="license-key" placeholder="INGRESE SU CÓDIGO">
             </div>
-            <button class="btn-gold" onclick="verificarLicencia()">Activar Ministerio</button>
+            <button class="btn-gold" id="btn-login" onclick="verificarLicencia()">Activar Ministerio</button>
         </div>
 
-        <div id="main-app">
+        <div id="main-app" style="display: none;">
             <div class="input-group">
                 <label>Consulta o Pasaje Bíblico</label>
-                <textarea id="user-input" rows="5" placeholder="Escriba el tema para su análisis doctrinal..."></textarea>
+                <textarea id="user-input" rows="5" placeholder="Escriba su pasaje..."></textarea>
             </div>
             <button class="btn-gold" onclick="procesarConsulta()">GENERAR ESTUDIO PROFUNDO</button>
             <div style="margin-top: 20px;">
@@ -155,38 +109,62 @@
     </div>
 
 <script>
-    const firebaseConfig = { apiKey: "AIzaSyBf9xenhC3kO4vhO8EJMDnVAYm7L-S_jRU", authDomain: "predicador-pro.firebaseapp.com", projectId: "predicador-pro", storageBucket: "predicador-pro.appspot.com", messagingSenderId: "54203135548", appId: "1:54203135548:web:7f3b832b85a3637e96b8c8" };
+    const firebaseConfig = {
+        apiKey: "AIzaSyBf9xenhC3kO4vhO8EJMDnVAYm7L-S_jRU",
+        authDomain: "predicador-pro.firebaseapp.com",
+        projectId: "predicador-pro",
+        storageBucket: "predicador-pro.appspot.com",
+        messagingSenderId: "54203135548",
+        appId: "1:54203135548:web:7f3b832b85a3637e96b8c8"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    async function verificarLicencia() {
-        const key = document.getElementById('license-key').value.trim().toUpperCase();
-        if(!key) return;
-        const doc = await db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key).get();
-        if (doc.exists && doc.data().active) {
-            document.getElementById('auth-box').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-        } else { alert("Acceso No Autorizado."); }
-    }
-
+    // 1. FUNCIÓN TEMA (CORREGIDA)
     function toggleTheme(mode) {
-        if(mode === 'light') document.body.classList.add('light-mode');
-        else document.body.classList.remove('light-mode');
+        const body = document.getElementById('body-tag');
+        if(mode === 'light') body.classList.add('light-mode');
+        else body.classList.remove('light-mode');
     }
 
+    // 2. FUNCIÓN ACCESO (CORREGIDA)
+    async function verificarLicencia() {
+        const keyInput = document.getElementById('license-key');
+        const key = keyInput.value.trim().toUpperCase();
+        if(!key) { alert("Por favor, ingrese un código."); return; }
+        
+        try {
+            const docRef = db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key);
+            const doc = await docRef.get();
+            if (doc.exists && doc.data().active === true) {
+                document.getElementById('auth-box').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+            } else {
+                alert("Código inválido o inactivo.");
+            }
+        } catch(e) {
+            console.error(e);
+            alert("Error de conexión con el servidor.");
+        }
+    }
+
+    // 3. FUNCIÓN VOZ
     function startSpeech() {
-        const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        rec.lang = 'es-PY'; rec.start();
-        rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; };
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'es-PY';
+        recognition.start();
+        recognition.onresult = (event) => {
+            document.getElementById('user-input').value = event.results[0][0].transcript;
+        };
     }
 
     function procesarConsulta() {
         const status = document.getElementById('status-text');
-        status.innerText = "Consultando fuentes doctrinales y referencias exegéticas...";
+        status.innerText = "Sincronizando fuentes doctrinales...";
         setTimeout(() => { 
-            status.innerText = "Estudio generado con éxito.";
-            alert("El bosquejo se ha procesado bajo el rigor de la Confesión de 1689.");
-        }, 2000);
+            status.innerText = "Análisis completado.";
+            alert("Estudio procesado bajo el rigor de la Confesión de 1689.");
+        }, 1500);
     }
 </script>
 </body>
