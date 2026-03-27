@@ -30,48 +30,52 @@
             width: 95%;
             max-width: 500px;
             padding: 50px 40px;
-            border-radius: 4px;
+            border-radius: 8px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            border-top: 4px solid var(--gold);
+            border-top: 5px solid var(--gold);
             text-align: center;
             position: relative;
         }
         h1 { 
             color: var(--gold); 
             letter-spacing: 4px; 
-            margin: 0 0 5px 0; 
-            font-size: 28px;
+            margin: 0 0 10px 0; 
+            font-size: 30px;
             text-transform: uppercase;
         }
         .subtitle { 
             font-style: italic; 
             color: #777; 
-            font-size: 13px; 
+            font-size: 14px; 
             margin-bottom: 40px;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
         }
         .input-group { margin-bottom: 25px; text-align: left; }
         label { 
             display: block; 
             color: var(--gold); 
-            margin-bottom: 10px; 
-            font-size: 11px; 
+            margin-bottom: 12px; 
+            font-size: 12px; 
             text-transform: uppercase;
             font-weight: bold;
+            letter-spacing: 1px;
         }
         input, textarea {
             width: 100%;
-            padding: 15px;
+            padding: 18px;
             background: #000;
             border: 1px solid #333;
             color: #fff;
-            border-radius: 0;
+            border-radius: 4px;
             box-sizing: border-box;
             font-size: 16px;
+            font-family: 'Georgia', serif;
         }
+        input:focus, textarea:focus { border-color: var(--gold); outline: none; }
+        
         button {
             width: 100%;
-            padding: 18px;
+            padding: 20px;
             background: var(--gold);
             color: black;
             border: none;
@@ -80,17 +84,19 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             font-size: 14px;
+            transition: 0.3s;
         }
-        button:hover { background: #fff; }
+        button:hover { background: #fff; transform: translateY(-2px); }
         
         #main-app { display: none; margin-top: 30px; }
-        .footer-info { margin-top: 40px; font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
+        .footer-info { margin-top: 50px; font-size: 11px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
         
-        .top-icons { position: absolute; top: 20px; right: 20px; color: var(--gold); }
-        .top-icons i { cursor: pointer; font-size: 18px; opacity: 0.7; }
+        .top-icons { position: absolute; top: 20px; right: 25px; color: var(--gold); }
+        .top-icons i { cursor: pointer; font-size: 20px; opacity: 0.7; }
 
-        .light-mode { background-color: #222; }
-        .light-mode .app-card { background: var(--parchment); color: #1a1a1a; border-top: 4px solid #8b4513; }
+        /* MODO PERGAMINO */
+        .light-mode { background-color: #2c2c2c; }
+        .light-mode .app-card { background: var(--parchment); color: #1a1a1a; border-top: 5px solid #8b4513; }
         .light-mode h1, .light-mode label { color: #8b4513; }
         .light-mode input, .light-mode textarea { background: #fff; color: #000; border: 1px solid #d3c4a8; }
         .light-mode button { background: #8b4513; color: #fff; }
@@ -100,7 +106,7 @@
 
 <div class="app-card">
     <div class="top-icons">
-        <i class="fas fa-sun" onclick="toggleTheme()"></i>
+        <i class="fas fa-sun" onclick="toggleTheme()" title="Cambiar Modo"></i>
     </div>
     
     <h1>PREDICADOR-PRO</h1>
@@ -109,25 +115,25 @@
     <div id="auth-box">
         <div class="input-group">
             <label>Código de Autorización Ministerial</label>
-            <input type="text" id="license-key" placeholder="INGRESE SU CÓDIGO">
+            <input type="text" id="license-key" placeholder="INGRESE SU CLAVE">
         </div>
         <button onclick="verificarLicencia()">Activar Plataforma</button>
     </div>
 
     <div id="main-app">
         <div class="input-group">
-            <label>Idea Homilética / Texto Bíblico</label>
-            <textarea id="user-input" rows="5" placeholder="Dicta o escribe aquí..."></textarea>
+            <label>Idea Homilética o Texto Bíblico</label>
+            <textarea id="user-input" rows="5" placeholder="Escribe o dicta aquí..."></textarea>
         </div>
-        <button onclick="enviarConsulta()">Generar Bosquejo</button>
-        <button onclick="startSpeech()" style="background: transparent; color: var(--gold); border: 1px solid var(--gold); margin-top: 10px;">
+        <button onclick="enviarConsulta()">Generar Bosquejo Exegético</button>
+        <button onclick="startSpeech()" style="background: transparent; color: var(--gold); border: 1px solid var(--gold); margin-top: 15px;">
             <i class="fas fa-microphone"></i> Dictar por Voz
         </button>
-        <p id="status-msg" style="font-size: 12px; margin-top: 15px; color: var(--gold);"></p>
+        <p id="status-msg" style="font-size: 13px; margin-top: 20px; color: var(--gold); font-style: italic;"></p>
     </div>
 
     <div class="footer-info">
-        Administración: Jorge Álvarez<br>Villa Elisa, Paraguay
+        Administración: Jorge Álvarez<br>Villa Elisa, Paraguay | 2026
     </div>
 </div>
 
@@ -151,8 +157,9 @@
         if (doc.exists && doc.data().active === true) {
             document.getElementById('auth-box').style.display = 'none';
             document.getElementById('main-app').style.display = 'block';
+            document.getElementById('status-msg').innerText = "Bienvenido. Motor de conocimiento activo.";
         } else {
-            alert("Código inválido.");
+            alert("Código no válido.");
         }
     }
 
@@ -166,8 +173,8 @@
     }
 
     async function enviarConsulta() {
-        document.getElementById('status-msg').innerText = "Consultando Teología de Berkhof...";
-        setTimeout(() => { alert("Bosquejo generado con éxito."); }, 1000);
+        document.getElementById('status-msg').innerText = "Analizando bajo la lente de Berkhof...";
+        setTimeout(() => { alert("Bosquejo generado con éxito."); }, 1200);
     }
 </script>
 </body>
