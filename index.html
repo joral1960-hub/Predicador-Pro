@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PREDICADOR-PRO | Homilética Profesional</title>
+    <title>PREDICADOR-PRO | Soli Deo Gloria</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -15,7 +15,7 @@
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         
-        const myFirebaseConfig = {
+        const firebaseConfig = {
           apiKey: "AIzaSyC3tAC8y7E1SfnTWi08fwq7gMXP_mnmpfw", 
           authDomain: "predicador-pro.firebaseapp.com",
           projectId: "predicador-pro",
@@ -24,97 +24,110 @@
           appId: "1:145970938733:web:357aa4d0523d2892891064"
         };
 
-        const app = initializeApp(myFirebaseConfig);
+        const app = initializeApp(firebaseConfig);
         window.PredicadorDB = {
             db: getFirestore(app),
             auth: getAuth(app),
             doc, getDoc, signInAnonymously,
-            appId: 'predicador-pro-default',
             ready: true
         };
     </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Crimson+Pro:wght@400;600&display=swap');
-        body { font-family: 'Inter', sans-serif; transition: 0.3s; }
-        .dark { background-color: #0f0f12; color: #f8fafc; }
-        .light { background-color: #f1f5f9; color: #1e293b; }
-        .theological-paper { font-family: 'Crimson Pro', serif; font-size: 1.2rem; line-height: 1.7; }
+        body { font-family: 'Inter', sans-serif; transition: 0.3s; margin: 0; }
+        .dark-mode { background-color: #0f0f12; color: #f8fafc; }
+        .light-mode { background-color: #f1f5f9; color: #1e293b; }
+        .theological-text { font-family: 'Crimson Pro', serif; font-size: 1.25rem; line-height: 1.8; }
         .glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-        .dark .card { background-color: #1a1a20; border-color: #334155; }
-        .light .card { background-color: #ffffff; border-color: #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .dark-mode .card { background-color: #1a1a20; border-color: #334155; }
+        .light-mode .card { background-color: #ffffff; border-color: #e2e8f0; color: #1e293b; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
     </style>
 </head>
-<body id="app-body" class="dark">
+<body id="app-body" class="dark-mode">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        const SYSTEM_PROMPT = "Eres PREDICADOR-PRO, un erudito teológico reformado. Responde con profundidad exegética basada en la Confesión de 1689.";
-
         const App = () => {
-            const [isLicenseValid, setIsLicenseValid] = useState(false);
-            const [licenseCode, setLicenseCode] = useState(localStorage.getItem('predicador_license') || '');
-            const [activeKey, setActiveKey] = useState(null);
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [license, setLicense] = useState(localStorage.getItem('predicador_license') || '');
+            const [apiKey, setApiKey] = useState(null);
+            const [status, setStatus] = useState('');
             const [messages, setMessages] = useState([]);
             const [input, setInput] = useState('');
-            const [isLoading, setIsLoading] = useState(false);
+            const [loading, setLoading] = useState(false);
             const [theme, setTheme] = useState('dark');
 
             const toggleTheme = () => {
                 const newTheme = theme === 'dark' ? 'light' : 'dark';
                 setTheme(newTheme);
-                document.getElementById('app-body').className = newTheme;
+                document.getElementById('app-body').className = newTheme === 'dark' ? 'dark-mode' : 'light-mode';
             };
 
-            const validateLicense = async (code) => {
-                if (!code) return;
+            const handleLogin = async () => {
+                if (!license) return;
+                setStatus('Validando credenciales...');
                 try {
+                    if (!window.PredicadorDB?.ready) throw new Error("Esperando al servidor...");
+                    
                     await window.PredicadorDB.signInAnonymously(window.PredicadorDB.auth);
-                    const { db, appId, doc, getDoc } = window.PredicadorDB;
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'licenses', code.trim().toUpperCase());
+                    const { db, doc, getDoc } = window.PredicadorDB;
+                    
+                    // RUTA MAESTRA: artifacts/predicador-pro-default/public/data/licenses/CODIGO
+                    const docRef = doc(db, 'artifacts', 'predicador-pro-default', 'public', 'data', 'licenses', license.trim().toUpperCase());
                     const snap = await getDoc(docRef);
-                    if (snap.exists() && snap.data().active) {
-                        const key = snap.data().apiKey || snap.data().apikey;
-                        setActiveKey(key);
-                        setIsLicenseValid(true);
-                        localStorage.setItem('predicador_license', code.toUpperCase());
-                    } else { alert("Licencia Inválida"); localStorage.removeItem('predicador_license'); }
-                } catch (e) { console.error(e); }
-            };
 
-            useEffect(() => { if (licenseCode) validateLicense(licenseCode); }, []);
+                    if (snap.exists() && snap.data().active) {
+                        setApiKey(snap.data().apiKey || snap.data().apikey);
+                        setIsLoggedIn(true);
+                        localStorage.setItem('predicador_license', license.toUpperCase());
+                        setStatus('');
+                    } else {
+                        setStatus('Código no encontrado o inactivo.');
+                    }
+                } catch (err) {
+                    setStatus(`Error: ${err.message}`);
+                }
+            };
 
             const handleSend = async () => {
-                if (!input.trim() || !activeKey) return;
-                const newMsg = { role: 'user', content: input };
-                setMessages([...messages, newMsg]);
+                if (!input.trim() || loading) return;
+                const userMsg = { role: 'user', content: input };
+                setMessages([...messages, userMsg]);
                 setInput('');
-                setIsLoading(true);
+                setLoading(true);
 
                 try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeKey}`, {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: SYSTEM_PROMPT + "\n\nConsulta: " + input }] }] })
+                        body: JSON.stringify({ contents: [{ parts: [{ text: "Eres PREDICADOR-PRO, un asistente teológico reformado. Responde con profundidad y basándote en la Confesión de 1689. \n\nConsulta: " + input }] }] })
                     });
                     const data = await res.json();
-                    const responseText = data.candidates[0].content.parts[0].text;
-                    setMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
-                } catch (err) {
-                    setMessages(prev => [...prev, { role: 'assistant', content: "Error de conexión. Verifique su llave API en Firebase." }]);
-                } finally { setIsLoading(false); }
+                    const text = data.candidates[0].content.parts[0].text;
+                    setMessages(prev => [...prev, { role: 'assistant', content: text }]);
+                } catch (e) {
+                    setMessages(prev => [...prev, { role: 'assistant', content: "Error al conectar con el motor de sabiduría. Revisa tu llave API." }]);
+                } finally { setLoading(false); }
             };
 
-            if (!isLicenseValid) {
+            if (!isLoggedIn) {
                 return (
                     <div className="flex items-center justify-center h-screen p-6">
-                        <div className="card max-w-md w-full p-10 rounded-[2rem] border text-center shadow-2xl bg-[#16161a]">
+                        <div className="card max-w-md w-full p-10 rounded-[2.5rem] border text-center shadow-2xl bg-[#16161a]">
                             <i className="fas fa-lock text-4xl text-lime-500 mb-6"></i>
-                            <h2 className="text-xl font-bold mb-6 uppercase tracking-widest text-white">Acceso Ministerial</h2>
-                            <input type="text" value={licenseCode} onChange={(e) => setLicenseCode(e.target.value)} placeholder="CÓDIGO" className="w-full bg-black border border-slate-700 rounded-xl p-4 text-center text-white mb-4 outline-none focus:border-lime-500" />
-                            <button onClick={() => validateLicense(licenseCode)} className="w-full bg-lime-500 text-black font-bold py-4 rounded-xl hover:bg-lime-400 uppercase">Activar</button>
+                            <h2 className="text-xl font-bold mb-6 uppercase tracking-widest">Acceso Ministerial</h2>
+                            <input 
+                                type="text" 
+                                value={license} 
+                                onChange={(e) => setLicense(e.target.value)} 
+                                placeholder="CÓDIGO (Ej: GUIDO-PRO-2026)" 
+                                className="w-full bg-black border border-slate-700 rounded-xl p-4 text-center text-white mb-4 outline-none focus:border-lime-500"
+                            />
+                            <button onClick={handleLogin} className="w-full bg-lime-500 text-black font-bold py-4 rounded-xl hover:bg-lime-400 uppercase tracking-widest">Activar</button>
+                            <p className="mt-4 text-xs text-slate-500 italic">{status}</p>
                         </div>
                     </div>
                 );
@@ -142,17 +155,18 @@
                         {messages.length === 0 && (
                             <div className="h-full flex flex-col items-center justify-center opacity-10 text-center">
                                 <i className="fas fa-book-open text-7xl mb-4"></i>
-                                <h2 className="text-3xl font-bold italic">Laboratorio Homilético</h2>
+                                <h2 className="text-3xl font-bold italic">Estudio Teológico</h2>
+                                <p>"Escudriñad las Escrituras..."</p>
                             </div>
                         )}
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`p-6 rounded-[1.5rem] max-w-[90%] border ${msg.role === 'user' ? 'bg-lime-500 text-black border-lime-400' : 'card'}`}>
-                                    <div className="theological-paper whitespace-pre-wrap">{msg.content}</div>
+                                    <div className="theological-text whitespace-pre-wrap">{msg.content}</div>
                                 </div>
                             </div>
                         ))}
-                        {isLoading && <div className="text-lime-500 animate-pulse text-xs font-bold tracking-widest"><i className="fas fa-spinner fa-spin mr-2"></i>ANALIZANDO...</div>}
+                        {loading && <div className="text-lime-500 animate-pulse text-xs font-bold tracking-widest"><i className="fas fa-spinner fa-spin mr-2"></i>ANALIZANDO...</div>}
                     </main>
 
                     <footer className="p-6 border-t border-slate-800">
