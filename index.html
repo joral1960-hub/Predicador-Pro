@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PREDICADOR-PRO | Acceso Ministerial</title>
+    <title>PREDICADOR-PRO | Soli Deo Gloria</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -11,131 +11,140 @@
         :root {
             --gold: #d4af37;
             --dark-bg: #121212;
-            --card-bg: #1e1e1e;
-            --text-main: #f0f0f0;
-            --parchment: #f4ecd8;
+            --text-color: #e0e0e0;
+            --pastel-bible: #fdf6e3;
         }
-        body { 
-            font-family: 'Georgia', serif; 
-            background-color: var(--dark-bg); 
-            color: var(--text-main); 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh;
-        }
-        .app-card {
-            background: var(--card-bg);
-            width: 95%;
-            max-width: 500px;
-            padding: 50px 40px;
-            border-radius: 8px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            border-top: 5px solid var(--gold);
-            text-align: center;
-            position: relative;
-        }
-        h1 { 
-            color: var(--gold); 
-            letter-spacing: 4px; 
-            margin: 0 0 10px 0; 
-            font-size: 30px;
-            text-transform: uppercase;
-        }
-        .subtitle { 
-            font-style: italic; 
-            color: #777; 
-            font-size: 14px; 
-            margin-bottom: 40px;
-            letter-spacing: 3px;
-        }
-        .input-group { margin-bottom: 25px; text-align: left; }
-        label { 
-            display: block; 
-            color: var(--gold); 
-            margin-bottom: 12px; 
-            font-size: 12px; 
-            text-transform: uppercase;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 18px;
-            background: #000;
-            border: 1px solid #333;
-            color: #fff;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 16px;
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: var(--dark-bg);
             font-family: 'Georgia', serif;
+            color: var(--text-color);
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
         }
-        input:focus, textarea:focus { border-color: var(--gold); outline: none; }
-        
-        button {
-            width: 100%;
+
+        /* Pantalla de Inicio (Login) */
+        #auth-screen {
+            text-align: center;
+            width: 100%; max-width: 400px;
             padding: 20px;
-            background: var(--gold);
-            color: black;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
+        }
+
+        .logo-main {
+            font-size: 32px; color: var(--gold);
+            letter-spacing: 5px; margin-bottom: 10px;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            font-size: 14px;
+        }
+
+        /* App Principal (Pantalla Completa) */
+        #main-app {
+            display: none;
+            width: 100vw; height: 100vh;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, #1e1e1e 0%, #0f0f0f 100%);
+        }
+
+        .bible-icon {
+            font-size: 120px;
+            color: #d3c4a8; /* Color pastel suave */
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.2));
+        }
+
+        .workspace {
+            width: 90%; max-width: 700px;
+            text-align: center;
+        }
+
+        .input-container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 10px;
+            margin-top: 30px;
+        }
+
+        textarea {
+            width: 100%; height: 120px;
+            background: transparent; border: none;
+            color: #fff; font-size: 18px;
+            padding: 15px; box-sizing: border-box;
+            font-family: 'Georgia', serif; resize: none;
+        }
+
+        textarea:focus { outline: none; }
+
+        .controls {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-top: 10px; border-top: 1px solid #222;
+        }
+
+        .btn-action {
+            background: var(--gold); color: #000;
+            border: none; padding: 12px 30px;
+            border-radius: 6px; font-weight: bold;
+            cursor: pointer; text-transform: uppercase;
+            letter-spacing: 1px; transition: 0.3s;
+        }
+
+        .btn-action:hover { background: #fff; transform: translateY(-2px); }
+
+        .mic-icon {
+            font-size: 24px; color: var(--gold);
+            cursor: pointer; padding: 10px;
             transition: 0.3s;
         }
-        button:hover { background: #fff; transform: translateY(-2px); }
-        
-        #main-app { display: none; margin-top: 30px; }
-        .footer-info { margin-top: 50px; font-size: 11px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .top-icons { position: absolute; top: 20px; right: 25px; color: var(--gold); }
-        .top-icons i { cursor: pointer; font-size: 20px; opacity: 0.7; }
 
-        /* MODO PERGAMINO */
-        .light-mode { background-color: #2c2c2c; }
-        .light-mode .app-card { background: var(--parchment); color: #1a1a1a; border-top: 5px solid #8b4513; }
-        .light-mode h1, .light-mode label { color: #8b4513; }
-        .light-mode input, .light-mode textarea { background: #fff; color: #000; border: 1px solid #d3c4a8; }
-        .light-mode button { background: #8b4513; color: #fff; }
+        .mic-icon:hover { color: #fff; }
+
+        #status-msg {
+            margin-top: 20px; font-style: italic; color: var(--gold);
+            font-size: 14px; min-height: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%; padding: 15px; margin-bottom: 20px;
+            background: #000; border: 1px solid #333;
+            color: #fff; border-radius: 4px; box-sizing: border-box;
+            text-align: center; font-size: 18px;
+        }
     </style>
 </head>
 <body>
 
-<div class="app-card">
-    <div class="top-icons">
-        <i class="fas fa-sun" onclick="toggleTheme()" title="Cambiar Modo"></i>
-    </div>
-    
-    <h1>PREDICADOR-PRO</h1>
-    <div class="subtitle">SOLI DEO GLORIA</div>
-
-    <div id="auth-box">
-        <div class="input-group">
-            <label>Código de Autorización Ministerial</label>
-            <input type="text" id="license-key" placeholder="INGRESE SU CLAVE">
-        </div>
-        <button onclick="verificarLicencia()">Activar Plataforma</button>
+    <div id="auth-screen">
+        <div class="logo-main">PREDICADOR-PRO</div>
+        <p style="color: #666; font-size: 12px; letter-spacing: 2px; margin-bottom: 30px;">SOLI DEO GLORIA</p>
+        <input type="text" id="license-key" placeholder="CÓDIGO DE ACCESO">
+        <button class="btn-action" onclick="verificarLicencia()" style="width: 100%;">ENTRAR AL MINISTERIO</button>
     </div>
 
     <div id="main-app">
-        <div class="input-group">
-            <label>Idea Homilética o Texto Bíblico</label>
-            <textarea id="user-input" rows="5" placeholder="Escribe o dicta aquí..."></textarea>
-        </div>
-        <button onclick="enviarConsulta()">Generar Bosquejo Exegético</button>
-        <button onclick="startSpeech()" style="background: transparent; color: var(--gold); border: 1px solid var(--gold); margin-top: 15px;">
-            <i class="fas fa-microphone"></i> Dictar por Voz
-        </button>
-        <p id="status-msg" style="font-size: 13px; margin-top: 20px; color: var(--gold); font-style: italic;"></p>
-    </div>
+        <div class="workspace">
+            <div class="bible-icon">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <h2 style="font-weight: normal; letter-spacing: 2px; color: #888;">Prepare su Estudio</h2>
 
-    <div class="footer-info">
-        Administración: Jorge Álvarez<br>Villa Elisa, Paraguay | 2026
+            <div class="input-container">
+                <textarea id="user-input" placeholder="Dicta o escribe aquí tu pasaje bíblico o idea..."></textarea>
+                <div class="controls">
+                    <i class="fas fa-microphone mic-icon" onclick="startSpeech()" title="Dictar"></i>
+                    <button class="btn-action" onclick="enviarConsulta()">GENERAR ESTUDIO</button>
+                </div>
+            </div>
+            
+            <p id="status-msg"></p>
+        </div>
+        
+        <div style="position: absolute; bottom: 30px; color: #444; font-size: 11px; letter-spacing: 1px;">
+            ADMINISTRACIÓN JORGE ÁLVAREZ | VILLA ELISA, PY
+        </div>
     </div>
-</div>
 
 <script>
     const firebaseConfig = {
@@ -152,29 +161,40 @@
     async function verificarLicencia() {
         const key = document.getElementById('license-key').value.trim().toUpperCase();
         if(!key) return;
-        const docRef = db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key);
-        const doc = await docRef.get();
-        if (doc.exists && doc.data().active === true) {
-            document.getElementById('auth-box').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-            document.getElementById('status-msg').innerText = "Bienvenido. Motor de conocimiento activo.";
-        } else {
-            alert("Código no válido.");
-        }
+        
+        try {
+            const docRef = db.collection("artifacts/predicador-pro-default/public/data/licenses").doc(key);
+            const doc = await docRef.get();
+            
+            if (doc.exists && doc.data().active === true) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+            } else {
+                alert("Acceso inválido.");
+            }
+        } catch(e) { alert("Error de red."); }
     }
-
-    function toggleTheme() { document.body.classList.toggle('light-mode'); }
 
     function startSpeech() {
         const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         rec.lang = 'es-PY';
         rec.start();
-        rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; };
+        rec.onstart = () => { document.getElementById('status-msg').innerText = "Escuchando su voz..."; };
+        rec.onresult = (e) => { 
+            document.getElementById('user-input').value = e.results[0][0].transcript;
+            document.getElementById('status-msg').innerText = "";
+        };
     }
 
     async function enviarConsulta() {
-        document.getElementById('status-msg').innerText = "Analizando bajo la lente de Berkhof...";
-        setTimeout(() => { alert("Bosquejo generado con éxito."); }, 1200);
+        const status = document.getElementById('status-msg');
+        status.innerText = "Consultando fuentes y referencias doctrinales...";
+        
+        // Simulación de proceso para asegurar que el mensaje se vea antes del resultado
+        setTimeout(() => {
+            alert("Estudio Bíblico procesado con éxito.");
+            status.innerText = "";
+        }, 2000);
     }
 </script>
 </body>
